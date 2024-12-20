@@ -1,128 +1,179 @@
 "use client";
-import { useForm } from "react-hook-form";
-import { signIn } from "next-auth/react";
-import { useRouter } from "next/navigation";
-import { useState } from "react";
+import educMaxLogo from "@/img/EducMaxLogo.png";
+import { RegisterBtn } from "@/components/header/registerBtn";
 import Image from "next/image";
+import { useState, useEffect } from "react";
+import { useRouter } from "next/navigation";
+import PhotoUpload from "@/components/register/photoUpload";
+import { useForm } from "react-hook-form";
 
-import teacherIcon from "@/img/teacher.png";
-import emailIcon from "@/img/email.png";
-import padlockIcon from "@/img/padlock.png";
-
-function LoginPage() {
+export default function Register() {
+  const [profileImage, setProfileImage] = useState<string | null>(null);
   const {
     register,
     handleSubmit,
     formState: { errors },
   } = useForm();
   const router = useRouter();
-  const [error, setError] = useState(null);
+
+  const handleImageChange = (image: string | null) => {
+    setProfileImage(image);
+  };
 
   const onSubmit = handleSubmit(async (data) => {
-    const res = await signIn("credentials", {
-      email: data.email,
-      password: data.password,
-      redirect: false,
+    if (data.password !== data.confirmPassword) {
+      return alert("Las contraseñas no son iguales.");
+    }
+
+    const ageNumber = parseInt(data.age);
+    const role = "teacher";
+
+    const res = await fetch("/api/auth/register", {
+      method: "POST",
+      body: JSON.stringify({
+        firstname: data.firstname,
+        lastname: data.lastname,
+        age: ageNumber,
+        email: data.email,
+        password: data.password,
+      }),
+      headers: {
+        "Content-Type": "application/json",
+      },
     });
 
-    if (res.error) {
-      setError(res.error);
-    } else {
-      router.push("/");
-      router.refresh();
+    if (res.ok) {
+      router.push("/auth/login");
     }
   });
 
   return (
-    <div className="min-h-screen flex flex-col justify-center items-center bg-blue-50 py-10">
-      <div>
-        <Image
-          src={teacherIcon}
-          alt="Teacher Icon"
-          className="w-20 h-20 mb-5"
-        />
-      </div>
-      <div className="text-2xl">
-        <p className="text-gray-600 text-sm">
-          ¿Todavía no tienes una cuenta?{" "}
-          <span>
-            <a href="/auth/register" className="text-green-600 hover:underline">
-              Crea una cuenta
-            </a>
-          </span>
-          .
-        </p>
-      </div>
-      <form
-        onSubmit={onSubmit}
-        className="w-96 p-6 bg-white rounded-xl shadow-lg"
-      >
-        {error && (
-          <p className="bg-red-500 text-lg text-white p-3 rounded mb-2">
-            {error}
-          </p>
-        )}
+    <div className="flex flex-col min-h-screen">
+      {/* Main Section */}
+      <main className="flex-grow bg-[url('/BgRegister.png')] bg-cover bg-center relative">
+        <div className="absolute inset-0 bg-black/30"></div>
+        <div className="relative flex justify-center items-center h-full">
+          <div className="w-full max-w-lg bg-[#445b50] rounded-lg p-8">
+            <h1 className="text-3xl font-extrabold text-white text-center mb-8">
+              Crear una Cuenta
+            </h1>
+            <div className="w-full bg-white rounded-md shadow-md p-6">
+              <form onSubmit={onSubmit}>
+                {/* Upload Photo */}
+                <PhotoUpload onImageChange={handleImageChange} />
+                {errors.image && (
+                  <p className="text-red-500 text-sm mt-1">{errors.image}</p>
+                )}
 
-        <h1 className="font-bold text-4xl text-center mb-6 text-gray-800">
-          Inicio de Sesión
-        </h1>
+                {/* First Name */}
+                <div className="mb-4">
+                  <input
+                    type="text"
+                    placeholder="Nombre"
+                    className="w-full bg-gray-200 rounded-lg px-4 py-3"
+                    {...register("firstname", {
+                      required: "Tu nombre es obligatorio.",
+                    })}
+                  />
+                  {errors.firstname && (
+                    <p className="text-red-500 text-sm mt-1">
+                      {errors.firstname.message}
+                    </p>
+                  )}
+                </div>
 
-        {/* Email Input */}
-        <label htmlFor="email" className="text-slate-500 mb-2 block text-sm">
-          Email:
-        </label>
-        <div className="flex items-center border-b-2 border-gray-300 mb-4">
-          <Image src={emailIcon} alt="Email Icon" className="w-6 h-6 mr-3" />
-          <input
-            type="email"
-            {...register("email", {
-              required: {
-                value: true,
-                message: "Email is required",
-              },
-            })}
-            className="flex-1 p-2 bg-transparent focus:outline-none text-slate-300"
-            placeholder="user@email.com"
-          />
+                {/* Last Name */}
+                <div className="mb-4">
+                  <input
+                    type="text"
+                    placeholder="Apellido"
+                    className="w-full bg-gray-200 rounded-lg px-4 py-3"
+                    {...register("lastname", {
+                      required: "Tu apellido es obligatorio.",
+                    })}
+                  />
+                  {errors.lastname && (
+                    <p className="text-red-500 text-sm mt-1">
+                      {errors.lastname.message}
+                    </p>
+                  )}
+                </div>
+
+                {/* Email */}
+                <div className="mb-4">
+                  <input
+                    type="email"
+                    placeholder="Correo electrónico"
+                    className="w-full bg-gray-200 rounded-lg px-4 py-3"
+                    {...register("email", {
+                      required: "Tu correo electrónico es obligatorio.",
+                    })}
+                  />
+                  {errors.email && (
+                    <p className="text-red-500 text-sm mt-1">
+                      {errors.email.message}
+                    </p>
+                  )}
+                </div>
+
+                {/* Password */}
+                <div className="mb-4">
+                  <input
+                    type="password"
+                    placeholder="Contraseña"
+                    className="w-full bg-gray-200 rounded-lg px-4 py-3"
+                    {...register("password", {
+                      required: "Tu contraseña es obligatoria.",
+                    })}
+                  />
+                  {errors.password && (
+                    <p className="text-red-500 text-sm mt-1">
+                      {errors.password.message}
+                    </p>
+                  )}
+                </div>
+
+                {/* Confirm Password */}
+                <div className="mb-4">
+                  <input
+                    type="password"
+                    placeholder="Confirmar contraseña"
+                    className="w-full bg-gray-200 rounded-lg px-4 py-3"
+                    {...register("confirmPassword", {
+                      required: "Verifica tu contraseña.",
+                    })}
+                  />
+                  {errors.confirmPassword && (
+                    <p className="text-red-500 text-sm mt-1">
+                      {errors.confirmPassword.message}
+                    </p>
+                  )}
+                </div>
+
+                {/* Age */}
+                <div className="mb-4">
+                  <input
+                    type="number"
+                    placeholder="Edad"
+                    className="w-full bg-gray-200 rounded-lg px-4 py-3"
+                    {...register("age", { required: "Ingresa tu edad." })}
+                  />
+                  {errors.age && (
+                    <p className="text-red-500 text-sm mt-1">
+                      {errors.age.message}
+                    </p>
+                  )}
+                </div>
+
+                {/* Submit Button */}
+                <button className="w-full py-3 mt-6 text-white font-semibold bg-yellow-500 rounded-lg shadow-lg hover:bg-yellow-600 transition-all">
+                  Registrar
+                </button>
+              </form>
+            </div>
+          </div>
         </div>
-        {errors.email && (
-          <span className="text-red-500 text-xs">{errors.email.message}</span>
-        )}
-
-        {/* Password Input */}
-        <label htmlFor="password" className="text-slate-500 mb-2 block text-sm">
-          Password:
-        </label>
-        <div className="flex items-center border-b-2 border-gray-300 mb-4">
-          <Image
-            src={padlockIcon}
-            alt="Padlock Icon"
-            className="w-6 h-6 mr-3"
-          />
-          <input
-            type="password"
-            {...register("password", {
-              required: {
-                value: true,
-                message: "Password is required",
-              },
-            })}
-            className="flex-1 p-2 bg-transparent focus:outline-none text-slate-300"
-            placeholder="******"
-          />
-        </div>
-        {errors.password && (
-          <span className="text-red-500 text-xs">
-            {errors.password.message}
-          </span>
-        )}
-
-        <button className="w-full bg-yellowMain text-white p-3 rounded-lg mt-4 hover:bg-yellow-600">
-          Iniciar sesión
-        </button>
-      </form>
+      </main>
     </div>
   );
 }
-
-export default LoginPage;

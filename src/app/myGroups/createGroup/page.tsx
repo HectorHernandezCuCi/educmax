@@ -124,6 +124,9 @@ export default function CreateGroup() {
           `Estudiante ingresado: ${savedStudent.student.name}, ID: ${savedStudent.student.id}`
         ); // Asegúrate de que la respuesta contenga el ID y nombre
 
+        // Log the values before making the fetch request
+        console.log("groupId:", group.id, "studentId:", savedStudent.student.id);
+
         // Ahora puedes usar el ID y nombre del estudiante para asociarlo al grupo
         const studentGroupResponse = await fetch("/api/studentGroup", {
           method: "POST",

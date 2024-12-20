@@ -18,6 +18,9 @@ model User {
   createdAt DateTime     @default(now())
   
   teacherGroups TeacherGroup[] // Relación inversa
+  posts      Post[]        // Relación con los posts creados por el usuario
+  likes      Like[]        // Relación con los likes dados por el usuario
+  comments   Comment[]     // Relación con los comentarios hechos por el usuario
 }
 
 model Group {
@@ -59,4 +62,38 @@ model StudentGroup {
 
   student   Student  @relation(fields: [studentId], references: [id])
   group     Group    @relation(fields: [groupId], references: [id])
+}
+
+model Post {
+  id        String   @id @default(uuid())
+  title     String
+  content   String
+  createdAt DateTime @default(now())
+  userId    String   // Relaciona al usuario que creó el post
+
+  user      User     @relation(fields: [userId], references: [id])
+  likes     Like[]   // Relación con los likes recibidos por el post
+  comments  Comment[]      // Relación con los comentarios recibidos por el post
+}
+
+model Like {
+  id        Int      @id @default(autoincrement())
+  userId    String   // Relaciona al usuario que dio el like
+  postId    String   // Relaciona al post que recibió el like
+
+  user      User     @relation(fields: [userId], references: [id])
+  post      Post     @relation(fields: [postId], references: [id])
+
+  @@unique([userId, postId])
+}
+
+model Comment {
+  id        String   @id @default(uuid())
+  content   String
+  createdAt DateTime @default(now())
+  userId    String   // Relaciona al usuario que hizo el comentario
+  postId    String   // Relaciona al post que recibió el comentario
+
+  user      User     @relation(fields: [userId], references: [id])
+  post      Post     @relation(fields: [postId], references: [id])
 }

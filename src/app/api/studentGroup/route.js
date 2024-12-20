@@ -11,6 +11,7 @@ export async function POST(request) {
     const { studentId, groupId } = data;
 
     if (!studentId || !groupId) {
+      console.error("Missing studentId or groupId:", { studentId, groupId }); // Detailed logging
       return NextResponse.json(
         { error: "studentId and groupId are required" },
         { status: 400 }
