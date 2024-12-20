@@ -1,0 +1,62 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id        String       @id @default(uuid())
+  name      String
+  lastname  String
+  email     String       @unique
+  password  String
+  age       Int
+  role      String       @default("teacher")
+  createdAt DateTime     @default(now())
+  
+  teacherGroups TeacherGroup[] // Relación inversa
+}
+
+model Group {
+  id          String        @id @default(uuid())
+  name        String
+  grade       String
+  studentCount Int
+  teacher     String?
+  startDate   DateTime
+  endDate     DateTime
+  notes       String?
+  
+  studentGroups StudentGroup[] // Relación muchos a muchos con estudiantes
+  teacherGroups TeacherGroup[] // Relación con los profesores
+}
+
+model Student {
+  id        String   @id @default(uuid())
+  name      String
+  listNumber Int
+  studentGroups StudentGroup[] // Relación muchos a muchos con grupos
+}
+
+model TeacherGroup {
+  id        Int    @id @default(autoincrement())
+  userId    String // Relaciona al profesor
+  groupId   String // Relaciona al grupo
+  
+  user      User   @relation(fields: [userId], references: [id])
+  group     Group  @relation(fields: [groupId], references: [id])
+
+  @@unique([userId, groupId])
+}
+
+model StudentGroup {
+  id        Int      @id @default(autoincrement())
+  studentId String   // Relaciona al estudiante
+  groupId   String   // Relaciona al grupo
+
+  student   Student  @relation(fields: [studentId], references: [id])
+  group     Group    @relation(fields: [groupId], references: [id])
+}
