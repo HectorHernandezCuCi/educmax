@@ -13,6 +13,7 @@ export async function GET(req, { params }) {
         lastname: true,
         email: true,
         profilePicture: true,
+        posts: true, // Include user's posts
       },
     });
 

@@ -1,6 +1,36 @@
 import { NextResponse } from "next/server";
 import db from "@/libs/db";
 
+export async function GET(request, { params }) {
+  try {
+    const { id } = params;
+
+    // Fetch posts by user ID
+    const posts = await db.post.findMany({
+      where: { userId: id },
+      include: {
+        user: true,
+        likes: true,
+      },
+    });
+
+    if (!posts) {
+      return NextResponse.json(
+        { error: "Posts not found" },
+        { status: 404 }
+      );
+    }
+
+    return NextResponse.json({ posts }, { status: 200 });
+  } catch (error) {
+    console.error("Error fetching posts:", error.message);
+    return NextResponse.json(
+      { error: "Error fetching posts" },
+      { status: 500 }
+    );
+  }
+}
+
 export async function DELETE(request, { params }) {
   try {
     const { id } = params;

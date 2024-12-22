@@ -6,13 +6,16 @@ import lecture from "@/img/lecture.png";
 import Image from "next/image";
 import { useSession } from "next-auth/react";
 import { useEffect, useState } from "react";
+import PencilAnimation from "@/components/loader/PencilAnimation"; // Import PencilAnimation
 
 export default function CreateGroup() {
   const { data: session, status } = useSession();
-  const [isSessionLoaded, setIsSessionLoaded] = useState(false);
+  const [isSessionLoaded, setIsSessionLoaded] = useState(false); // Add loading state
   const [studentFields, setStudentFields] = useState([]);
   const [currentStudentIndex, setCurrentStudentIndex] = useState(0);
   const [allStudentsRegistered, setAllStudentsRegistered] = useState(false);
+  const [isGroupNameEntered, setIsGroupNameEntered] = useState(false);
+  const [isStudentNameEntered, setIsStudentNameEntered] = useState(false);
   const router = useRouter();
 
   useEffect(() => {
@@ -31,8 +34,22 @@ export default function CreateGroup() {
     setValue,
   } = useForm();
 
+  const handleGroupNameChange = (event) => {
+    setIsGroupNameEntered(event.target.value.trim().length > 0);
+  };
+
+  const handleStudentNameChange = (event) => {
+    setIsStudentNameEntered(event.target.value.trim().length > 0);
+  };
+
   const handleStudentCountChange = (event) => {
     const count = parseInt(event.target.value, 10);
+    if (isNaN(count) || count < 0) {
+      setStudentFields([]);
+      setCurrentStudentIndex(0);
+      setAllStudentsRegistered(false);
+      return;
+    }
     setStudentFields(Array(count).fill(""));
     setCurrentStudentIndex(0);
     setAllStudentsRegistered(false);
@@ -173,12 +190,23 @@ export default function CreateGroup() {
   };
 
   if (status === "loading" || !isSessionLoaded) {
-    return <p>Loading...</p>;
+    return (
+      <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-50">
+        <PencilAnimation />
+      </div>
+    );
   }
 
+  const today = new Date().toISOString().split("T")[0];
+
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-50 py-10 px-4">
-      <div className="max-w-md w-full bg-white shadow-md rounded-lg p-6">
+    <div className="relative min-h-screen flex items-center justify-center bg-gray-50 py-10 px-4">
+      {status === "loading" || !isSessionLoaded ? ( // Show loader if loading is true
+        <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-50">
+          <PencilAnimation />
+        </div>
+      ) : null}
+      <div className={`max-w-md w-full bg-white shadow-md rounded-lg p-6 ${status === "loading" || !isSessionLoaded ? 'opacity-50' : ''}`}>
         <div className="flex flex-col items-center mb-6">
           <Image src={lecture} alt="Lecture Icon" className="w-20 h-20 mb-4" />
           <p className="text-center text-gray-600 text-sm">
@@ -214,6 +242,7 @@ export default function CreateGroup() {
                   message: "No puede exceder los 50 caracteres.",
                 },
               })}
+              onChange={handleGroupNameChange}
             />
             {errors.name && (
               <span className="text-red-500 text-xs">
@@ -275,6 +304,7 @@ export default function CreateGroup() {
                 },
               })}
               onChange={handleStudentCountChange}
+              disabled={isStudentNameEntered}
             />
             {errors.studentCount && (
               <span className="text-red-500 text-xs">
@@ -306,6 +336,7 @@ export default function CreateGroup() {
                       currentStudentIndex + 1
                     } es obligatorio.`,
                   })}
+                  onChange={handleStudentNameChange}
                 />
                 {errors.students?.[currentStudentIndex]?.name && (
                   <span className="text-red-500 text-xs">
@@ -363,13 +394,13 @@ export default function CreateGroup() {
               {...register("startDate", {
                 required: "La fecha de inicio es obligatoria.",
                 validate: (value) => {
-                  const today = new Date().toISOString().split("T")[0];
                   return (
                     value >= today ||
                     "La fecha debe ser igual o posterior a hoy."
                   );
                 },
               })}
+              min={today}
             />
             {errors.startDate && (
               <span className="text-red-500 text-xs">
@@ -399,6 +430,7 @@ export default function CreateGroup() {
                   );
                 },
               })}
+              min={today}
             />
             {errors.endDate && (
               <span className="text-red-500 text-xs">

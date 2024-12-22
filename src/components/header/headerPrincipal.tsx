@@ -82,7 +82,7 @@ export function HeaderPrincipal() {
             // Mostrar nombre del usuario y botón de logout si hay sesión
             <>
               {session.user && (
-                <span className="text-white">Hola, {session.user.name}</span>
+                <a href={`/profile/${session.user.id}`}><span className="text-white">Hola, {session.user.name}</span></a>
               )}
               <button
                 onClick={() => signOut()}
