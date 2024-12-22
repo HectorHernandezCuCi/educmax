@@ -28,6 +28,29 @@ export default function Register() {
     const ageNumber = parseInt(data.age);
     const role = "teacher";
 
+    let profilePictureUrl = null;
+    if (profileImage) {
+      console.log("Uploading image:", profileImage); // Verificar que la imagen se está enviando
+
+      const uploadRes = await fetch("/api/upload", {
+        method: "POST",
+        body: JSON.stringify({ file: profileImage }),
+        headers: {
+          "Content-Type": "application/json",
+        },
+      });
+
+      if (uploadRes.ok) {
+        const uploadData = await uploadRes.json();
+        profilePictureUrl = uploadData.url;
+        console.log("Image uploaded, URL:", profilePictureUrl); // Verificar la URL de la imagen subida
+      } else {
+        const errorData = await uploadRes.json();
+        console.error("Error uploading image:", errorData);
+        return alert("Error al subir la imagen de perfil.");
+      }
+    }
+
     const res = await fetch("/api/auth/register", {
       method: "POST",
       body: JSON.stringify({
@@ -36,6 +59,7 @@ export default function Register() {
         age: ageNumber,
         email: data.email,
         password: data.password,
+        profilePicture: profilePictureUrl,
       }),
       headers: {
         "Content-Type": "application/json",

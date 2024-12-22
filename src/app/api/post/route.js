@@ -1,44 +1,45 @@
 import { NextResponse } from "next/server";
 import db from "@/libs/db";
+import { promises as fs } from "fs";
+import path from "path";
 
 export async function POST(request) {
   try {
     const formData = await request.formData();
-
     const title = formData.get("title");
     const content = formData.get("content");
     const userId = formData.get("userId");
+    const file = formData.get("file");
 
-    // Validate data
-    if (!title || !content || !userId) {
-      return NextResponse.json(
-        { error: "Olvidaste llenar todos los campos" },
-        { status: 400 }
-      );
+    let filePath = null;
+    if (file) {
+      const allowedTypes = ["application/pdf", "image/jpeg", "image/png", "video/mp4"];
+      if (!allowedTypes.includes(file.type)) {
+        return NextResponse.json(
+          { error: "Solo se permiten archivos PDF, imágenes y videos." },
+          { status: 400 }
+        );
+      }
+
+      const buffer = Buffer.from(await file.arrayBuffer());
+      const fileName = `${Date.now()}-${file.name}`;
+      const uploadDir = path.join(process.cwd(), "public", "uploads");
+      await fs.mkdir(uploadDir, { recursive: true }); // Ensure the directory exists
+      const fullPath = path.join(uploadDir, fileName);
+      await fs.writeFile(fullPath, buffer);
+      filePath = `/uploads/${fileName}`;
     }
 
-    // Check if user exists
-    const userExists = await db.user.findUnique({
-      where: { id: userId },
-    });
-
-    if (!userExists) {
-      return NextResponse.json(
-        { error: "Usuario no encontrado" },
-        { status: 404 }
-      );
-    }
-
-    // Create a new post
-    const newPost = await db.post.create({
+    const post = await db.post.create({
       data: {
         title,
         content,
         userId,
+        filePath,
       },
     });
 
-    return NextResponse.json(newPost, { status: 201 });
+    return NextResponse.json({ post }, { status: 201 });
   } catch (error) {
     console.error("Error creating post:", error.message);
     return NextResponse.json(

@@ -23,7 +23,7 @@ export async function POST(request) {
       );
     }
 
-    const { firstname, lastname, email, password, age } = data;
+    const { firstname, lastname, email, password, age, profilePicture } = data;
 
     // Validar campos obligatorios
     if (!firstname || !lastname || !email || !password || !age) {
@@ -32,6 +32,8 @@ export async function POST(request) {
         { status: 400 }
       );
     }
+
+    console.log("Data received:", data); // Verificar los datos recibidos
 
     // Verificar si el correo ya existe en la base de datos
     const existingUser = await db.user.findUnique({
@@ -56,8 +58,11 @@ export async function POST(request) {
         email,
         password: hashedPassword,
         age,
+        profilePicture: profilePicture || "", // Asegurarse de que profilePicture no sea null
       },
     });
+
+    console.log("User created:", newUser); // Verificar el usuario creado
 
     // Respuesta exitosa
     return NextResponse.json(

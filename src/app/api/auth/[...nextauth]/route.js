@@ -25,6 +25,15 @@ export const authOptions = {
           where: {
             email: credentials.email,
           },
+          select: {
+            id: true,
+            name: true,
+            lastname: true,
+            email: true,
+            age: true,
+            profilePicture: true, // Asegúrate de seleccionar la URL de la imagen de perfil
+            password: true,
+          },
         });
 
         if (!userFound) {
@@ -42,11 +51,13 @@ export const authOptions = {
         }
 
         // Devolver datos del usuario
+        console.log("User found:", userFound); // Verificar los datos del usuario encontrado
         return {
           id: userFound.id,
           name: `${userFound.name} ${userFound.lastname}`,
           email: userFound.email,
           age: userFound.age,
+          profilePicture: userFound.profilePicture, // Agregar la URL de la imagen de perfil
         };
       },
     }),
@@ -61,6 +72,8 @@ export const authOptions = {
         token.id = user.id;
         token.name = user.name;
         token.email = user.email;
+        token.profilePicture = user.profilePicture; // Agregar la URL de la imagen de perfil
+        console.log("JWT token:", token); // Verificar el token JWT
       }
       return token;
     },
@@ -69,6 +82,8 @@ export const authOptions = {
         session.user.id = token.id;
         session.user.name = token.name;
         session.user.email = token.email;
+        session.user.profilePicture = token.profilePicture; // Agregar la URL de la imagen de perfil
+        console.log("Session user:", session.user); // Verificar el usuario de la sesión
       }
       return session;
     },

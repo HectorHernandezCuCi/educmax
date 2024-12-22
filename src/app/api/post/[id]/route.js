@@ -17,6 +17,11 @@ export async function DELETE(request, { params }) {
       );
     }
 
+    // Delete likes associated with the post
+    await db.like.deleteMany({
+      where: { postId: id },
+    });
+
     // Delete the post
     await db.post.delete({
       where: { id },

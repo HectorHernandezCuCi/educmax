@@ -16,6 +16,7 @@ model User {
   age       Int
   role      String       @default("teacher")
   createdAt DateTime     @default(now())
+  profilePicture String // URL de la foto de perfil
   
   teacherGroups TeacherGroup[] // Relación inversa
   posts      Post[]        // Relación con los posts creados por el usuario
@@ -70,6 +71,7 @@ model Post {
   content   String
   createdAt DateTime @default(now())
   userId    String   // Relaciona al usuario que creó el post
+  filePath  String?  // Ruta del archivo subido
 
   user      User     @relation(fields: [userId], references: [id])
   likes     Like[]   // Relación con los likes recibidos por el post
@@ -93,6 +95,9 @@ model Comment {
   createdAt DateTime @default(now())
   userId    String   // Relaciona al usuario que hizo el comentario
   postId    String   // Relaciona al post que recibió el comentario
+  parentCommentId String? // Relaciona al comentario padre para comentarios anidados
+  parentComment   Comment? @relation("CommentReplies", fields: [parentCommentId], references: [id])
+  replies         Comment[] @relation("CommentReplies")
 
   user      User     @relation(fields: [userId], references: [id])
   post      Post     @relation(fields: [postId], references: [id])

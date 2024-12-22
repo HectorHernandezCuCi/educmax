@@ -26,10 +26,12 @@ export default function Resources() {
   const [posts, setPosts] = useState([]);
   const [message, setMessage] = useState("");
   const [userId, setUserId] = useState(null);
+  const [profilePicture, setProfilePicture] = useState("https://via.placeholder.com/40"); // Set default profile picture
+  const [showLoginModal, setShowLoginModal] = useState(false);
 
   useEffect(() => {
-    // Fetch logged-in user's ID
-    const fetchUserId = async () => {
+    // Fetch logged-in user's ID and profile picture
+    const fetchUserData = async () => {
       try {
         const response = await fetch("/api/auth/session");
         if (response.status === 401) {
@@ -37,15 +39,18 @@ export default function Resources() {
           return;
         }
         const result = await response.json();
+        console.log("User data:", result.user); // Verificar los datos del usuario
         if (result.user) {
           setUserId(result.user.id);
+          setProfilePicture(result.user.profilePicture || "https://via.placeholder.com/40"); // Set profile picture
+          console.log("Profile picture URL:", result.user.profilePicture); // Verificar la URL de la imagen de perfil
         } else {
           setMessage(
             "Crea una cuenta o inicia sesión para compartir con todos"
           );
         }
       } catch (error) {
-        console.error("Error fetching user ID:", error);
+        console.error("Error fetching user data:", error);
       }
     };
 
@@ -67,13 +72,24 @@ export default function Resources() {
     const fetchPosts = async () => {
       try {
         const response = await axios.get("/api/post");
-        setPosts(response.data.posts);
+        const postsWithUser = await Promise.all(
+          response.data.posts.map(async (post) => {
+            try {
+              const userResponse = await axios.get(`/api/user/${post.userId}`);
+              return { ...post, user: userResponse.data.user };
+            } catch (error) {
+              console.error(`Error fetching user data for post ${post.id}:`, error);
+              return { ...post, user: null };
+            }
+          })
+        );
+        setPosts(postsWithUser);
       } catch (error) {
         console.error("Error fetching posts:", error);
       }
     };
 
-    fetchUserId();
+    fetchUserData();
     fetchGroups();
     fetchPosts();
   }, []);
@@ -86,7 +102,13 @@ export default function Resources() {
       formData.append("userId", userId); // Use dynamic user ID
 
       if (data.resourceFile && data.resourceFile[0]) {
-        formData.append("file", data.resourceFile[0]);
+        const file = data.resourceFile[0];
+        const allowedTypes = ["application/pdf", "image/jpeg", "image/png", "video/mp4"];
+        if (!allowedTypes.includes(file.type)) {
+          setMessage("Solo se permiten archivos PDF, imágenes y videos.");
+          return;
+        }
+        formData.append("file", file);
       }
 
       const response = await fetch("/api/post", {
@@ -102,7 +124,18 @@ export default function Resources() {
           try {
             const response = await fetch("/api/post");
             const result = await response.json();
-            setPosts(result.posts);
+            const postsWithUser = await Promise.all(
+              result.posts.map(async (post) => {
+                try {
+                  const userResponse = await axios.get(`/api/user/${post.userId}`);
+                  return { ...post, user: userResponse.data.user };
+                } catch (error) {
+                  console.error(`Error fetching user data for post ${post.id}:`, error);
+                  return { ...post, user: null };
+                }
+              })
+            );
+            setPosts(postsWithUser);
           } catch (error) {
             console.error("Error fetching posts:", error);
           }
@@ -137,7 +170,18 @@ export default function Resources() {
           try {
             const response = await fetch("/api/post");
             const result = await response.json();
-            setPosts(result.posts);
+            const postsWithUser = await Promise.all(
+              result.posts.map(async (post) => {
+                try {
+                  const userResponse = await axios.get(`/api/user/${post.userId}`);
+                  return { ...post, user: userResponse.data.user };
+                } catch (error) {
+                  console.error(`Error fetching user data for post ${post.id}:`, error);
+                  return { ...post, user: null };
+                }
+              })
+            );
+            setPosts(postsWithUser);
           } catch (error) {
             console.error("Error fetching posts:", error);
           }
@@ -176,7 +220,18 @@ export default function Resources() {
           try {
             const response = await fetch("/api/post");
             const result = await response.json();
-            setPosts(result.posts);
+            const postsWithUser = await Promise.all(
+              result.posts.map(async (post) => {
+                try {
+                  const userResponse = await axios.get(`/api/user/${post.userId}`);
+                  return { ...post, user: userResponse.data.user };
+                } catch (error) {
+                  console.error(`Error fetching user data for post ${post.id}:`, error);
+                  return { ...post, user: null };
+                }
+              })
+            );
+            setPosts(postsWithUser);
           } catch (error) {
             console.error("Error fetching posts:", error);
           }
@@ -190,6 +245,14 @@ export default function Resources() {
       console.error("Error liking post:", error);
       setMessage("Error al dar like al post");
     }
+  };
+
+  const handleDownload = (filePath) => {
+    if (!userId) {
+      setShowLoginModal(true);
+      return;
+    }
+    window.location.href = filePath;
   };
 
   return (
@@ -256,16 +319,20 @@ export default function Resources() {
             className="flex flex-col space-y-4"
           >
             <div className="flex items-center space-x-4">
-              <img
-                src={`https://via.placeholder.com/40`}
-                alt="User"
-                className="w-10 h-10 rounded-full"
-              />
+              {profilePicture && (
+                <Image
+                  src={profilePicture}
+                  alt="User"
+                  className="w-10 h-10 rounded-full"
+                  width={40}
+                  height={40}
+                />
+              )}
               <textarea
                 placeholder="Animate a compartir!"
                 {...register("resourceDescription", { required: true })}
                 name="resourceDescription"
-                id=""
+                id="resourceDescription"
                 className="w-full p-2 border-none"
                 style={{ resize: "none" }}
               ></textarea>
@@ -330,7 +397,7 @@ export default function Resources() {
                   <div className="flex items-center justify-between mb-4">
                     <div className="flex items-center">
                       <img
-                        src={`https://via.placeholder.com/40`}
+                        src={post.user?.profilePicture || "https://via.placeholder.com/40"}
                         alt="User"
                         className="w-10 h-10 rounded-full mr-4"
                       />
@@ -350,6 +417,26 @@ export default function Resources() {
                     </div>
                   </div>
                   <p className="text-gray-700 mb-4">{post.content}</p>
+                  {post.filePath && (
+                    <div className="mb-4">
+                      {post.filePath.endsWith(".pdf") ? (
+                        <embed src={post.filePath} width="100%" height="500px" type="application/pdf" />
+                      ) : post.filePath.endsWith(".mp4") ? (
+                        <video controls width="100%">
+                          <source src={post.filePath} type="video/mp4" />
+                          Your browser does not support the video tag.
+                        </video>
+                      ) : (
+                        <img src={post.filePath} alt="Uploaded file" className="w-full h-auto" />
+                      )}
+                      <button
+                        onClick={() => handleDownload(post.filePath)}
+                        className="mt-2 inline-block p-2 bg-blue-500 text-white rounded"
+                      >
+                        Descargar
+                      </button>
+                    </div>
+                  )}
                   <div className="flex items-center gap-5">
                     {userId && (
                       <LikeButton
@@ -372,6 +459,25 @@ export default function Resources() {
           </div>
         </div>
       </div>
+      {showLoginModal && (
+        <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50">
+          <div className="bg-white p-8 rounded shadow-lg text-center">
+            <p className="mb-4">Debes iniciar sesión para descargar el contenido</p>
+            <button
+              onClick={() => router.push("/auth/login")}
+              className="p-2 bg-blue-500 text-white rounded"
+            >
+              Iniciar sesión
+            </button>
+            <button
+              onClick={() => setShowLoginModal(false)}
+              className="p-2 bg-gray-500 text-white rounded ml-4"
+            >
+              Cancelar
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
