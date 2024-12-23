@@ -131,6 +131,10 @@ export default function Register() {
                     className="w-full bg-gray-200 rounded-lg px-4 py-3"
                     {...register("email", {
                       required: "Tu correo electrónico es obligatorio.",
+                      pattern: {
+                        value: /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,4}$/,
+                        message: "Ingresa un correo electrónico válido.",
+                      },
                     })}
                   />
                   {errors.email && (
@@ -148,6 +152,14 @@ export default function Register() {
                     className="w-full bg-gray-200 rounded-lg px-4 py-3"
                     {...register("password", {
                       required: "Tu contraseña es obligatoria.",
+                      minLength: {
+                        value: 8,
+                        message: "La contraseña debe tener al menos 8 caracteres.",
+                      },
+                      pattern: {
+                        value: /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$/,
+                        message: "La contraseña debe contener al menos una letra mayúscula, una letra minúscula, un número y un carácter especial.",
+                      },
                     })}
                   />
                   {errors.password && (

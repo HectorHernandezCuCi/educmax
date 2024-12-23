@@ -53,7 +53,7 @@ export default function MyGroups() {
   return (
     <div className="relative min-h-screen pb-10">
       {loading && ( // Show loader if loading is true
-        <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-50">
+        <div className="min-h-screen fixed inset-0 flex items-center justify-center bg-white z-50">
           <PencilAnimation />
         </div>
       )}

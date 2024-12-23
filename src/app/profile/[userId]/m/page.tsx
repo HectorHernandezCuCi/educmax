@@ -5,15 +5,16 @@ import { useSession } from "next-auth/react";
 import Image from "next/image";
 import Search from "@/components/resources/search";
 import PencilAnimation from "@/components/loader/PencilAnimation";
+import configurationIcon from "@/img/settingIcon.png";
 import { useRouter } from "next/navigation";
 
 export default function Profile() {
   const { data: session } = useSession();
+  const router = useRouter();
   const [loading, setLoading] = useState(true);
   const [posts, setPosts] = useState([]);
   const [filteredPosts, setFilteredPosts] = useState([]);
   const [sortByLikes, setSortByLikes] = useState(false);
-  const router = useRouter();
 
   const fetchPosts = useCallback(async () => {
     try {
@@ -32,9 +33,25 @@ export default function Profile() {
 
   useEffect(() => {
     if (session?.user) {
+      const userId = window.location.pathname.split("/")[2];
+      console.log("session.user.id:", session.user.id);
+      console.log("userId from URL:", userId);
+      if (!session.user.id) {
+        console.error("session.user.id is undefined");
+        return;
+      }
+      if (session.user.id !== userId) {
+        console.error("User ID does not match");
+        router.push("/unauthorized");
+        return;
+      }
+
       const fetchProfile = async () => {
         try {
           const response = await fetch(`/api/user/${session.user.id}`);
+          if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+          }
           const userData = await response.json();
           console.log(userData);
           setLoading(false);
@@ -48,7 +65,7 @@ export default function Profile() {
       fetchProfile();
       fetchPosts();
     }
-  }, [session, fetchPosts]);
+  }, [session, fetchPosts, router]);
 
   const handleSearch = (query) => {
     if (query.trim() === "") {
@@ -69,13 +86,20 @@ export default function Profile() {
     ? [...filteredPosts].sort((a, b) => b.likes.length - a.likes.length)
     : filteredPosts;
 
-  const downloadFile = (filePath) => {
-    const link = document.createElement('a');
-    link.href = filePath;
-    link.download = filePath.split('/').pop();
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
+  const deletePost = async (postId) => {
+    try {
+      const response = await fetch(`/api/post/${postId}`, {
+        method: "DELETE",
+      });
+      if (response.ok) {
+        setPosts(posts.filter((post) => post.id !== postId));
+        setFilteredPosts(filteredPosts.filter((post) => post.id !== postId));
+      } else {
+        console.error("Failed to delete post");
+      }
+    } catch (error) {
+      console.error("Error deleting post:", error);
+    }
   };
 
   if (!session?.user) {
@@ -101,7 +125,7 @@ export default function Profile() {
           <PencilAnimation />
         </div>
       )}
-      <div className={`min-h-screen pb-10 ${loading ? 'opacity-50' : ''}`}>
+      <div className={`min-h-screen pb-10 ${loading ? "opacity-50" : ""}`}>
         <div className="m-8 flex items-center justify-center p-8 space-x-8 bg-white shadow rounded-lg">
           {/* Profile Picture */}
           <div className="flex-shrink-0">
@@ -116,7 +140,22 @@ export default function Profile() {
           </div>
           {/* User Data */}
           <div>
-            <h1 className="text-3xl font-bold uppercase">{session.user.name}</h1>
+            <h1 className="text-3xl font-bold uppercase">
+              {session.user.name}
+            </h1>
+          </div>
+          {/* Configuration Icon */}
+          <div>
+            <Image
+              src={configurationIcon}
+              alt="Configuration Icon"
+              width={40}
+              height={40}
+              onClick={() =>
+                router.push(`/profile/${session.user.id}/configuration`)
+              }
+              className="cursor-pointer"
+            />
           </div>
         </div>
         {/* User Posts */}
@@ -169,10 +208,10 @@ export default function Profile() {
                     Likes: {post.likes.length}
                   </p>
                   <button
-                    className="mt-2 px-4 py-2 bg-green-500 text-white rounded"
-                    onClick={() => downloadFile(post.filePath)}
+                    className="mt-2 px-4 py-2 bg-red-500 text-white rounded"
+                    onClick={() => deletePost(post.id)}
                   >
-                    Descargar
+                    Eliminar
                   </button>
                 </div>
               ))

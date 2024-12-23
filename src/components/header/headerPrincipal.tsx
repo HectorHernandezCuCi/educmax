@@ -1,7 +1,7 @@
 "use client";
 import educMaxLogo from "@/img/EducMaxLogo.png";
 import { RegisterBtn } from "@/components/header/registerBtn";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
 import { useSession, signOut } from "next-auth/react";
@@ -9,9 +9,29 @@ import { useSession, signOut } from "next-auth/react";
 export function HeaderPrincipal() {
   const [isScrolled, setIsScrolled] = useState(false);
   const [isMenuOpen, setIsMenuOpen] = useState(false); // Estado para el menú móvil
+  const [loading, setLoading] = useState(true);
   const router = useRouter();
 
   const { data: session, status } = useSession();
+
+  useEffect(() => {
+      if (session?.user) {
+        const fetchProfile = async () => {
+          try {
+            const response = await fetch(`/api/user/${session.user.id}`);
+            const userData = await response.json();
+            console.log(userData);
+            setLoading(false);
+          } catch (err) {
+            console.error("Error fetching user data:", err);
+          } finally {
+            setLoading(false);
+          }
+        };
+  
+        fetchProfile();
+      }
+    }, [session]);
 
   // Función para alternar el estado del menú móvil
   const toggleMenu = () => {
@@ -81,15 +101,17 @@ export function HeaderPrincipal() {
           ) : (
             // Mostrar nombre del usuario y botón de logout si hay sesión
             <>
-              {session.user && (
-                <a href={`/profile/${session.user.id}`}><span className="text-white">Hola, {session.user.name}</span></a>
+              {session.user && session.user.profilePicture && (
+                <a href={`/profile/${session.user.id}/m`}>
+                  <Image 
+                    src={session.user.profilePicture}
+                    alt="User Image"
+                    width={40}
+                    height={40}
+                    className="rounded-full"
+                  />
+                </a>
               )}
-              <button
-                onClick={() => signOut()}
-                className="text-white font-semibold hover:underline"
-              >
-                Cerrar sesión
-              </button>
             </>
           )}
         </div>
@@ -161,17 +183,17 @@ export function HeaderPrincipal() {
             </>
           ) : (
             <>
-              {session.user && (
-                <span className="py-2 text-white">
-                  Hola, {session.user.name}
-                </span>
+              {session.user && session.user.profilePicture && (
+                <a href={`/profile/${session.user.id}/m`}>
+                  <Image 
+                    src={session.user.profilePicture}
+                    alt="User Image"
+                    width={40}
+                    height={40}
+                    className="rounded-full"
+                  />
+                </a>
               )}
-              <button
-                onClick={() => signOut()}
-                className="py-2 text-white font-semibold hover:underline"
-              >
-                Cerrar sesión
-              </button>
             </>
           )}
         </div>
