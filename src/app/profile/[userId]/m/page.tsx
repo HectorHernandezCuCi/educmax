@@ -7,6 +7,7 @@ import Search from "@/components/resources/search";
 import PencilAnimation from "@/components/loader/PencilAnimation";
 import configurationIcon from "@/img/settingIcon.png";
 import { useRouter } from "next/navigation";
+import heartIcon from "@/img/heart.png";
 
 export default function Profile() {
   const { data: session } = useSession();
@@ -15,6 +16,8 @@ export default function Profile() {
   const [posts, setPosts] = useState([]);
   const [filteredPosts, setFilteredPosts] = useState([]);
   const [sortByLikes, setSortByLikes] = useState(false);
+  const [likedPosts, setLikedPosts] = useState([]);
+  const [showPosts, setShowPosts] = useState(true);
 
   const fetchPosts = useCallback(async () => {
     try {
@@ -28,6 +31,20 @@ export default function Profile() {
       setFilteredPosts(data.posts);
     } catch (error) {
       console.error("Error fetching user posts:", error);
+    }
+  }, [session]);
+
+  const fetchLikedPosts = useCallback(async () => {
+    try {
+      const response = await fetch(`/api/user/${session.user.id}/liked-posts`);
+      if (response.status === 404) {
+        console.error("Liked posts not found");
+        return;
+      }
+      const data = await response.json();
+      setLikedPosts(data.likedPosts);
+    } catch (error) {
+      console.error("Error fetching liked posts:", error);
     }
   }, [session]);
 
@@ -64,8 +81,9 @@ export default function Profile() {
 
       fetchProfile();
       fetchPosts();
+      fetchLikedPosts();
     }
-  }, [session, fetchPosts, router]);
+  }, [session, fetchPosts, fetchLikedPosts, router]);
 
   const handleSearch = (query) => {
     if (query.trim() === "") {
@@ -120,13 +138,13 @@ export default function Profile() {
 
   return (
     <div className="relative min-h-screen pb-10">
-      {loading && ( // Show loader if loading is true
+      {loading && (
         <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-50">
           <PencilAnimation />
         </div>
       )}
       <div className={`min-h-screen pb-10 ${loading ? "opacity-50" : ""}`}>
-        <div className="m-8 flex items-center justify-center p-8 space-x-8 bg-white shadow rounded-lg">
+        <div className="m-4 md:m-8 flex flex-col md:flex-row items-center justify-center p-4 md:p-8 space-y-4 md:space-y-0 md:space-x-8 bg-white shadow rounded-lg">
           {/* Profile Picture */}
           <div className="flex-shrink-0">
             <Image
@@ -135,12 +153,12 @@ export default function Profile() {
               className="rounded-full"
               width={160}
               height={160}
-              priority // Add priority property
+              priority
             />
           </div>
           {/* User Data */}
           <div>
-            <h1 className="text-3xl font-bold uppercase">
+            <h1 className="text-2xl md:text-3xl font-bold uppercase">
               {session.user.name}
             </h1>
           </div>
@@ -158,66 +176,141 @@ export default function Profile() {
             />
           </div>
         </div>
-        {/* User Posts */}
-        <div className="mt-8 m-8 bg-white p-5 rounded-lg">
-          <h2 className="text-2xl font-bold mb-4">Mis Posts</h2>
-          <div className="flex items-center justify-between">
-            <Search onSearch={handleSearch} />
+        <div className="mt-4 md:mt-8 m-4 md:m-8 bg-white p-4 md:p-5 rounded-lg">
+          <div className="flex md:hidden justify-around mb-4">
             <button
-              className="mb-4 px-4 py-2 bg-blue-500 text-white rounded"
-              onClick={() => setSortByLikes(!sortByLikes)}
+              className={`px-4 py-2 rounded ${showPosts ? "bg-green-500 text-white" : "bg-green-300"}`}
+              onClick={() => setShowPosts(true)}
             >
-              {sortByLikes ? "Ordenar por fecha" : "Ordenar por favoritos"}
+              Mis Posts
             </button>
             <button
-              className="mb-4 ml-2 px-4 py-2 bg-red-500 text-white rounded"
-              onClick={resetFilter}
+              className={`px-4 py-2 rounded ${!showPosts ? "bg-red-500 text-white" : "bg-red-300"}`}
+              onClick={() => setShowPosts(false)}
             >
-              Quitar filtro
+              <Image src={heartIcon} alt="Likes" width={16} height={16} />
             </button>
           </div>
-          <div className="space-y-4">
-            {sortedPosts.length > 0 ? (
-              sortedPosts.map((post) => (
-                <div key={post.id} className="bg-white p-2 rounded shadow">
-                  <p className="text-gray-700 mb-2 text-sm">{post.content}</p>
-                  {post.filePath && (
-                    <div className="mb-2">
-                      {post.filePath.endsWith(".pdf") ? (
-                        <embed
-                          src={post.filePath}
-                          width="100%"
-                          height="300px"
-                          type="application/pdf"
-                        />
-                      ) : post.filePath.endsWith(".mp4") ? (
-                        <video controls width="100%">
-                          <source src={post.filePath} type="video/mp4" />
-                          Your browser does not support the video tag.
-                        </video>
-                      ) : (
-                        <img
-                          src={post.filePath}
-                          alt="Uploaded file"
-                          className="w-full h-auto"
-                        />
+          <div className="flex flex-col md:flex-row">
+            {/* User Posts */}
+            <div className={`w-full md:w-1/2 ${!showPosts && "hidden md:block"} pr-0 md:pr-4`}>
+              <h2 className="text-xl md:text-2xl font-bold mb-4">Mis Posts</h2>
+              <div className="flex flex-col md:flex-row items-center justify-between">
+                <Search onSearch={handleSearch} />
+                <button
+                  className="mb-4 md:mb-0 px-4 py-2 bg-blue-500 text-white rounded"
+                  onClick={() => setSortByLikes(!sortByLikes)}
+                >
+                  {sortByLikes ? "Ordenar por fecha" : "Ordenar por favoritos"}
+                </button>
+                <button
+                  className="mb-4 md:mb-0 ml-0 md:ml-2 px-4 py-2 bg-red-500 text-white rounded"
+                  onClick={resetFilter}
+                >
+                  Quitar filtro
+                </button>
+              </div>
+              <div className="space-y-4">
+                {sortedPosts.length > 0 ? (
+                  sortedPosts.map((post) => (
+                    <div
+                      key={post.id}
+                      className="bg-white border rounded-lg shadow-md p-4 mb-6"
+                    >
+                      <div className="flex justify-between items-center mb-3">
+                        <h3 className="text-gray-800 font-semibold text-lg truncate">
+                          Publicación #{post.id}
+                        </h3>
+                      </div>
+                      <p className="text-gray-600 text-sm leading-relaxed mb-4">
+                        {post.content}
+                      </p>
+                      {post.filePath && (
+                        <div className="mb-2">
+                          {post.filePath.endsWith(".pdf") ? (
+                            <embed
+                              src={post.filePath}
+                              width="100%"
+                              height="300px"
+                              type="application/pdf"
+                            />
+                          ) : post.filePath.endsWith(".mp4") ? (
+                            <video controls width="100%">
+                              <source src={post.filePath} type="video/mp4" />
+                              Your browser does not support the video tag.
+                            </video>
+                          ) : (
+                            <img
+                              src={post.filePath}
+                              alt="Uploaded file"
+                              className="rounded-lg shadow-md w-full h-auto object-cover border"
+                            />
+                          )}
+                        </div>
                       )}
+                      <div className="flex items-center text-gray-500 text-xs">
+                        <Image src={heartIcon} alt="Likes" width={16} height={16} />
+                        <span className="ml-1">{post.likes.length}</span>
+                      </div>
                     </div>
-                  )}
-                  <p className="text-gray-500 text-xs">
-                    Likes: {post.likes.length}
-                  </p>
-                  <button
-                    className="mt-2 px-4 py-2 bg-red-500 text-white rounded"
-                    onClick={() => deletePost(post.id)}
-                  >
-                    Eliminar
-                  </button>
-                </div>
-              ))
-            ) : (
-              <p>No has realizado ningún post.</p>
-            )}
+                  ))
+                ) : (
+                  <p>No has realizado ningún post.</p>
+                )}
+              </div>
+            </div>
+            {/* Liked Posts */}
+            <div className={`w-full md:w-1/2 ${showPosts && "hidden md:block"} pl-0 md:pl-4 mt-4 md:mt-0`}>
+              <h2 className="text-xl md:text-2xl font-bold mb-4">Posts que me gustan</h2>
+              <div className="space-y-4">
+                {likedPosts.length > 0 ? (
+                  likedPosts.map((post) => (
+                    <div
+                      key={post.id}
+                      className="bg-white border rounded-lg shadow-md p-4 mb-6"
+                    >
+                      <div className="flex justify-between items-center mb-3">
+                        <h3 className="text-gray-800 font-semibold text-lg truncate">
+                          Publicación #{post.id}
+                        </h3>
+                      </div>
+                      <p className="text-gray-600 text-sm leading-relaxed mb-4">
+                        {post.content}
+                      </p>
+                      {post.filePath && (
+                        <div className="mb-2">
+                          {post.filePath.endsWith(".pdf") ? (
+                            <embed
+                              src={post.filePath}
+                              width="100%"
+                              height="300px"
+                              type="application/pdf"
+                            />
+                          ) : post.filePath.endsWith(".mp4") ? (
+                            <video controls width="100%">
+                              <source src={post.filePath} type="video/mp4" />
+                              Your browser does not support the video tag.
+                            </video>
+                          ) : (
+                            <img
+                              src={post.filePath}
+                              alt="Uploaded file"
+                              className="rounded-lg shadow-md w-full h-auto object-cover border"
+                            />
+                          )}
+                        </div>
+                      )}
+                      <div className="flex items-center text-gray-500 text-xs">
+                        <Image src={heartIcon} alt="Likes" width={16} height={16} />
+                        <span className="ml-1">{post.likes.length}</span>
+                      </div>
+                    </div>
+                  ))
+                ) : (
+                  <p>No has dado like a ningún post.</p>
+                )}
+              </div>
+            </div>
           </div>
         </div>
       </div>

@@ -25,7 +25,25 @@ export default function Register() {
       return alert("Las contraseñas no son iguales.");
     }
 
+    // Verificar que la contraseña sea segura
+    const passwordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$/;
+    if (!passwordRegex.test(data.password)) {
+      return alert(
+        "La contraseña debe tener al menos 8 caracteres, incluyendo una letra mayúscula, una letra minúscula, un número y un carácter especial."
+      );
+    }
+
+    // Verificar que el correo electrónico sea válido
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(data.email)) {
+      return alert("Por favor, ingresa un correo electrónico válido.");
+    }
+
     const ageNumber = parseInt(data.age);
+    if (ageNumber < 18 || ageNumber >= 100) {
+      return alert("La edad debe ser mayor o igual a 18 y menor a 100.");
+    }
+
     const role = "teacher";
 
     let profilePictureUrl = null;
@@ -132,8 +150,8 @@ export default function Register() {
                     {...register("email", {
                       required: "Tu correo electrónico es obligatorio.",
                       pattern: {
-                        value: /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,4}$/,
-                        message: "Ingresa un correo electrónico válido.",
+                        value: /^[^\s@]+@[^\s@]+\.[^\s@]+$/,
+                        message: "Por favor, ingresa un correo electrónico válido.",
                       },
                     })}
                   />
@@ -152,13 +170,10 @@ export default function Register() {
                     className="w-full bg-gray-200 rounded-lg px-4 py-3"
                     {...register("password", {
                       required: "Tu contraseña es obligatoria.",
-                      minLength: {
-                        value: 8,
-                        message: "La contraseña debe tener al menos 8 caracteres.",
-                      },
                       pattern: {
                         value: /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$/,
-                        message: "La contraseña debe contener al menos una letra mayúscula, una letra minúscula, un número y un carácter especial.",
+                        message:
+                          "La contraseña debe tener al menos 8 caracteres, incluyendo una letra mayúscula, una letra minúscula, un número y un carácter especial.",
                       },
                     })}
                   />
@@ -192,7 +207,17 @@ export default function Register() {
                     type="number"
                     placeholder="Edad"
                     className="w-full bg-gray-200 rounded-lg px-4 py-3"
-                    {...register("age", { required: "Ingresa tu edad." })}
+                    {...register("age", {
+                      required: "Ingresa tu edad.",
+                      min: {
+                        value: 18,
+                        message: "Debes tener al menos 18 años.",
+                      },
+                      max: {
+                        value: 99,
+                        message: "La edad debe ser menor a 100.",
+                      },
+                    })}
                   />
                   {errors.age && (
                     <p className="text-red-500 text-sm mt-1">

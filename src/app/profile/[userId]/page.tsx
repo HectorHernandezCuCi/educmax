@@ -5,7 +5,8 @@ import { useSession } from "next-auth/react";
 import Image from "next/image";
 import Search from "@/components/resources/search";
 import PencilAnimation from "@/components/loader/PencilAnimation";
-import { useRouter } from "next/navigation";
+import { useRouter, usePathname } from "next/navigation";
+import schoolIcon from "@/img/backToschool.png";
 
 export default function Profile() {
   const { data: session } = useSession();
@@ -13,11 +14,14 @@ export default function Profile() {
   const [posts, setPosts] = useState([]);
   const [filteredPosts, setFilteredPosts] = useState([]);
   const [sortByLikes, setSortByLikes] = useState(false);
+  const [profileData, setProfileData] = useState(null);
   const router = useRouter();
+  const pathname = usePathname();
+  const userId = pathname.split("/").pop();
 
   const fetchPosts = useCallback(async () => {
     try {
-      const response = await fetch(`/api/post/${session.user.id}`);
+      const response = await fetch(`/api/post/${userId}`);
       if (response.status === 404) {
         console.error("Posts not found");
         return;
@@ -28,16 +32,20 @@ export default function Profile() {
     } catch (error) {
       console.error("Error fetching user posts:", error);
     }
-  }, [session]);
+  }, [userId]);
 
   useEffect(() => {
-    if (session?.user) {
+    if (userId) {
       const fetchProfile = async () => {
         try {
-          const response = await fetch(`/api/user/${session.user.id}`);
+          const response = await fetch(`/api/user/${userId}`);
+          if (response.status === 404) {
+            console.error("User not found");
+            return;
+          }
           const userData = await response.json();
-          console.log(userData);
-          setLoading(false);
+          console.log("Fetched user data:", userData); // Debug log
+          setProfileData(userData.user); // Access the nested user object
         } catch (err) {
           console.error("Error fetching user data:", err);
         } finally {
@@ -48,7 +56,7 @@ export default function Profile() {
       fetchProfile();
       fetchPosts();
     }
-  }, [session, fetchPosts]);
+  }, [userId, fetchPosts]);
 
   const handleSearch = (query) => {
     if (query.trim() === "") {
@@ -105,18 +113,22 @@ export default function Profile() {
         <div className="m-8 flex items-center justify-center p-8 space-x-8 bg-white shadow rounded-lg">
           {/* Profile Picture */}
           <div className="flex-shrink-0">
-            <Image
-              src={session.user.profilePicture}
-              alt="Profile Picture"
-              className="rounded-full"
-              width={160}
-              height={160}
-              priority // Add priority property
-            />
+            {profileData?.profilePicture ? (
+              <Image
+                src={profileData.profilePicture}
+                alt="Profile Picture"
+                className="rounded-full"
+                width={160}
+                height={160}
+                priority // Add priority property
+              />
+            ) : (
+              <div className="w-40 h-40 bg-gray-200 rounded-full"></div>
+            )}
           </div>
           {/* User Data */}
           <div>
-            <h1 className="text-3xl font-bold uppercase">{session.user.name}</h1>
+            <h1 className="text-3xl font-bold uppercase">{profileData?.name + " " + profileData?.lastname || "Cargando..."}</h1>
           </div>
         </div>
         {/* User Posts */}
@@ -125,13 +137,13 @@ export default function Profile() {
           <div className="flex items-center justify-between">
             <Search onSearch={handleSearch} />
             <button
-              className="mb-4 px-4 py-2 bg-blue-500 text-white rounded"
+              className="mb-4 px-4 py-2 bg-green-500 text-white rounded"
               onClick={() => setSortByLikes(!sortByLikes)}
             >
               {sortByLikes ? "Ordenar por fecha" : "Ordenar por favoritos"}
             </button>
             <button
-              className="mb-4 ml-2 px-4 py-2 bg-red-500 text-white rounded"
+              className="mb-4 ml-2 px-4 py-2 bg-green-500 text-white rounded"
               onClick={resetFilter}
             >
               Quitar filtro
@@ -140,8 +152,18 @@ export default function Profile() {
           <div className="space-y-4">
             {sortedPosts.length > 0 ? (
               sortedPosts.map((post) => (
-                <div key={post.id} className="bg-white p-2 rounded shadow">
-                  <p className="text-gray-700 mb-2 text-sm">{post.content}</p>
+                <div
+                  key={post.id}
+                  className="bg-white border rounded-lg shadow-md p-4 mb-6 "
+                >
+                  <div className="flex justify-between items-center mb-3">
+                    <h3 className="text-gray-800 font-semibold text-lg truncate">
+                      Publicación #{post.id}
+                    </h3>
+                  </div>
+                  <p className="text-gray-600 text-sm leading-relaxed mb-4">
+                    {post.content}
+                  </p>
                   {post.filePath && (
                     <div className="mb-2">
                       {post.filePath.endsWith(".pdf") ? (
@@ -160,7 +182,7 @@ export default function Profile() {
                         <img
                           src={post.filePath}
                           alt="Uploaded file"
-                          className="w-full h-auto"
+                          className="rounded-lg shadow-md w-full h-auto object-cover border"
                         />
                       )}
                     </div>
@@ -168,12 +190,6 @@ export default function Profile() {
                   <p className="text-gray-500 text-xs">
                     Likes: {post.likes.length}
                   </p>
-                  <button
-                    className="mt-2 px-4 py-2 bg-green-500 text-white rounded"
-                    onClick={() => downloadFile(post.filePath)}
-                  >
-                    Descargar
-                  </button>
                 </div>
               ))
             ) : (

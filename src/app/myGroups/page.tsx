@@ -7,6 +7,7 @@ import schoolBg from "@/img/schoolBg.jpg";
 import humanGroup from "@/img/humanGroup.png";
 import groupIcon from "@/img/diversity.png";
 import PencilAnimation from "@/components/loader/PencilAnimation"; // Import PencilAnimation
+import schoolIcon from "@/img/backToschool.png";
 
 export default function MyGroups() {
   const { data: session } = useSession();
@@ -57,7 +58,7 @@ export default function MyGroups() {
           <PencilAnimation />
         </div>
       )}
-      <div className={`min-h-screen pb-10 ${loading ? 'opacity-50' : ''}`}>
+      <div className={`min-h-screen pb-10 ${loading ? "opacity-50" : ""}`}>
         <div className="p-4 rounded-xl max-w-4xl mx-auto h-60">
           <div
             className="w-full h-full bg-cover bg-center flex justify-center items-center rounded-xl"
@@ -134,7 +135,22 @@ export default function MyGroups() {
               </div>
             ))
           ) : (
-            <p>No tienes grupos creados.</p>
+            <div className="flex flex-col items-center justify-center bg-gray-50 border border-gray-200 rounded-lg shadow-lg p-6">
+              <div className="bg-green-100 rounded-full p-4 shadow-md mb-4">
+                <Image
+                  src={schoolIcon}
+                  alt="schoolIcon"
+                  className="w-24 h-24"
+                  width={120}
+                />
+              </div>
+              <p className="text-center text-green-600 font-extrabold text-2xl">
+                No tienes grupos creados
+              </p>
+              <p className="text-center text-gray-500 mt-2 text-sm">
+                ¡Empieza a gestionar tus grupos fácilmente creando uno nuevo!
+              </p>
+            </div>
           )}
         </div>
       </div>

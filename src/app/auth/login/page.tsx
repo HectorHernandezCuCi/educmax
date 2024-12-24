@@ -78,7 +78,7 @@ function LoginPage() {
             {...register("email", {
               required: {
                 value: true,
-                message: "Email is required",
+                message: "Ingresa tu correo",
               },
             })}
             className="flex-1 p-2 bg-transparent focus:outline-none text-slate-300"
@@ -104,7 +104,7 @@ function LoginPage() {
             {...register("password", {
               required: {
                 value: true,
-                message: "Password is required",
+                message: "Ingresa tu contraseña",
               },
             })}
             className="flex-1 p-2 bg-transparent focus:outline-none text-slate-300"

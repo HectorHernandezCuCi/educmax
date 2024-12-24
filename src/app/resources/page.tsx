@@ -11,6 +11,8 @@ import emojiIcon from "@/img/emojiIcon.png";
 import Image from "next/image";
 import { format } from "date-fns";
 import PencilAnimation from "@/components/loader/PencilAnimation"; // Import PencilAnimation
+import BinButton from "@/components/resources/BinButton";
+import heartIcon from "@/img/heart.png";
 
 const Picker = dynamic(() => import("emoji-picker-react"), { ssr: false });
 
@@ -277,19 +279,16 @@ const Resources = () => {
             </a>
             <div>
               <a href={`/profile/${post.userId}`}>
-                <h3 className="font-bold">{post.user?.name} {post.user?.lastname}</h3>
+                <h3 className="font-bold">
+                  {post.user?.name} {post.user?.lastname}
+                </h3>
               </a>
               <p className="text-gray-500">{formatDate(post.createdAt)}</p>
             </div>
           </div>
           <div className="flex items-center space-x-2">
             {post.userId === userId && (
-              <button
-                onClick={() => deletePost(post.id)}
-                className="p-2 bg-red-500 text-white rounded"
-              >
-                Eliminar
-              </button>
+              <BinButton onClick={() => deletePost(post.id)} />
             )}
           </div>
         </div>
@@ -316,9 +315,35 @@ const Resources = () => {
               />
             )}
             <button
+              className="cursor-pointer group relative flex gap-1.5 px-8 py-4 bg-black bg-opacity-80 text-[#f1f1f1] rounded-3xl hover:bg-opacity-70 transition font-semibold shadow-md mt-5"
               onClick={() => handleDownload(post.filePath)}
-              className="mt-2 inline-block p-2 bg-blue-500 text-white rounded"
             >
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                fill="none"
+                viewBox="0 0 24 24"
+                height="24px"
+                width="24px"
+              >
+                <g strokeWidth="0" id="SVGRepo_bgCarrier"></g>
+                <g
+                  strokeLinejoin="round"
+                  strokeLinecap="round"
+                  id="SVGRepo_tracerCarrier"
+                ></g>
+                <g id="SVGRepo_iconCarrier">
+                  <g id="Interface / Download">
+                    <path
+                      strokeLinejoin="round"
+                      strokeLinecap="round"
+                      strokeWidth="2"
+                      stroke="#f1f1f1"
+                      d="M6 21H18M12 3V17M12 17L17 12M12 17L7 12"
+                      id="Vector"
+                    ></path>
+                  </g>
+                </g>
+              </svg>
               Descargar
             </button>
           </div>
@@ -332,7 +357,14 @@ const Resources = () => {
               onClick={() => likePost(post.id)}
             />
           )}
-          <span>{post._count.likes} Likes</span>
+          {userId ? (
+            <span>{post._count.likes} Likes</span>
+          ) : (
+            <div className="flex items-center">
+              <Image src={heartIcon} alt="Heart Icon" className="w-5 h-5 mr-2" />
+              <span>{post._count.likes}</span>
+            </div>
+          )}
         </div>
       </div>
     ));
@@ -345,7 +377,11 @@ const Resources = () => {
           <PencilAnimation />
         </div>
       )}
-      <div className={`p-8 grid grid-cols-3 gap-8 min-h-screen ${loading ? 'opacity-50' : ''}`}>
+      <div
+        className={`p-8 grid grid-cols-3 gap-8 min-h-screen ${
+          loading ? "opacity-50" : ""
+        }`}
+      >
         {/* menu Side bar */}
         <div className="flex flex-col  gap-5 col-span-1 bg-white p-4 rounded shadow sticky top-0 max-h-screen h-auto overflow-y-auto">
           <Search onSearch={handleSearch} />
@@ -384,7 +420,7 @@ const Resources = () => {
                 </p>
                 <button
                   onClick={() => router.push("/auth/login")}
-                  className="p-2 bg-yellow hover:bg-yellow-500 text-white rounded"
+                  className="p-2 bg-yellow-400 hover:bg-yellow-500 text-white rounded"
                 >
                   Iniciar sesión
                 </button>
@@ -432,7 +468,11 @@ const Resources = () => {
                       htmlFor="resourceFile"
                       className="cursor-pointer flex items-center justify-center"
                     >
-                      <Image src={folderIcon} alt="Upload" className="w-8 h-8" />
+                      <Image
+                        src={folderIcon}
+                        alt="Upload"
+                        className="w-8 h-8"
+                      />
                     </label>
                     <input
                       type="file"
@@ -473,7 +513,11 @@ const Resources = () => {
               </div>
             </form>
           ) : (
-            <p className="text-center text-red-500">{message}</p>
+            <div className="flex items-center justify-center bg-greenBG py-4 rounded-md shadow-lg">
+              <p className="text-center text-yellowMain font-bold text-lg px-4">
+                {message}
+              </p>
+            </div>
           )}
           <div className="mt-8">
             <h2 className="text-xl font-bold mb-4">Posts</h2>
@@ -534,7 +578,7 @@ const Resources = () => {
               </p>
               <button
                 onClick={() => router.push("/auth/login")}
-                className="p-2 bg-blue-500 text-white rounded"
+                className="p-2 bg-yellow-500 hover:bg-yellow-600 text-white rounded"
               >
                 Iniciar sesión
               </button>

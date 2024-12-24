@@ -15,23 +15,23 @@ export function HeaderPrincipal() {
   const { data: session, status } = useSession();
 
   useEffect(() => {
-      if (session?.user) {
-        const fetchProfile = async () => {
-          try {
-            const response = await fetch(`/api/user/${session.user.id}`);
-            const userData = await response.json();
-            console.log(userData);
-            setLoading(false);
-          } catch (err) {
-            console.error("Error fetching user data:", err);
-          } finally {
-            setLoading(false);
-          }
-        };
-  
-        fetchProfile();
-      }
-    }, [session]);
+    if (session?.user) {
+      const fetchProfile = async () => {
+        try {
+          const response = await fetch(`/api/user/${session.user.id}`);
+          const userData = await response.json();
+          console.log(userData);
+          setLoading(false);
+        } catch (err) {
+          console.error("Error fetching user data:", err);
+        } finally {
+          setLoading(false);
+        }
+      };
+
+      fetchProfile();
+    }
+  }, [session]);
 
   // Función para alternar el estado del menú móvil
   const toggleMenu = () => {
@@ -63,15 +63,11 @@ export function HeaderPrincipal() {
             </li>
             {!session ? (
               <>
-                <li className="hover:text-yellow-300 transition-colors duration-200 cursor-pointer">
-                  Recursos
-                </li>
-                <li className="hover:text-yellow-300 transition-colors duration-200 cursor-pointer">
-                  Blog
-                </li>
-                <li className="hover:text-yellow-300 transition-colors duration-200 cursor-pointer">
-                  Contacto
-                </li>
+                <a href="/resources">
+                  <li className="hover:text-yellow-300 transition-colors duration-200 cursor-pointer">
+                    Recursos
+                  </li>
+                </a>
               </>
             ) : (
               <>
@@ -103,7 +99,7 @@ export function HeaderPrincipal() {
             <>
               {session.user && session.user.profilePicture && (
                 <a href={`/profile/${session.user.id}/m`}>
-                  <Image 
+                  <Image
                     src={session.user.profilePicture}
                     alt="User Image"
                     width={40}
@@ -185,7 +181,7 @@ export function HeaderPrincipal() {
             <>
               {session.user && session.user.profilePicture && (
                 <a href={`/profile/${session.user.id}/m`}>
-                  <Image 
+                  <Image
                     src={session.user.profilePicture}
                     alt="User Image"
                     width={40}

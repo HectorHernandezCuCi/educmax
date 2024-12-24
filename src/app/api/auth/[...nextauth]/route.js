@@ -17,7 +17,7 @@ export const authOptions = {
       },
       async authorize(credentials) {
         if (!credentials?.email || !credentials?.password) {
-          throw new Error("Email and password are required.");
+          throw new Error("Es necesario ingresa el correo y la contraseña.");
         }
 
         // Buscar usuario en la base de datos
@@ -37,7 +37,7 @@ export const authOptions = {
         });
 
         if (!userFound) {
-          throw new Error("No user found with this email.");
+          throw new Error("Correo o contraseña incorrectos.");
         }
 
         // Validar contraseña
@@ -47,7 +47,7 @@ export const authOptions = {
         );
 
         if (!isPasswordValid) {
-          throw new Error("Invalid email or password.");
+          throw new Error("Correo o contraseña son incorrectos.");
         }
 
         // Devolver datos del usuario

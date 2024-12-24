@@ -206,7 +206,7 @@ export default function CreateGroup() {
           <PencilAnimation />
         </div>
       ) : null}
-      <div className={`max-w-md w-full bg-white shadow-md rounded-lg p-6 ${status === "loading" || !isSessionLoaded ? 'opacity-50' : ''}`}>
+      <div className={`max-w-md bg-yellowMain w-full bg-white shadow-md rounded-lg p-6 ${status === "loading" || !isSessionLoaded ? 'opacity-50' : ''}`}>
         <div className="flex flex-col items-center mb-6">
           <Image src={lecture} alt="Lecture Icon" className="w-20 h-20 mb-4" />
           <p className="text-center text-gray-600 text-sm">
@@ -315,14 +315,14 @@ export default function CreateGroup() {
 
           {/* Mostrar el campo del estudiante actual */}
           {studentFields.length > 0 && !allStudentsRegistered && (
-            <div className="space-y-2 border p-4 rounded-lg shadow-sm">
-              <h2 className="text-sm font-medium text-gray-700">
+            <div className="space-y-2 border p-4 bg-greenBG text-white rounded-lg shadow-sm">
+              <h2 className="text-sm font-medium">
                 Estudiante {currentStudentIndex + 1}
               </h2>
               <div>
                 <label
                   htmlFor={`students[${currentStudentIndex}].name`}
-                  className="block text-sm font-medium text-gray-700"
+                  className="block text-sm font-medium"
                 >
                   Nombre del Estudiante
                 </label>
@@ -330,7 +330,7 @@ export default function CreateGroup() {
                   type="text"
                   id={`students[${currentStudentIndex}].name`}
                   placeholder="Nombre del estudiante"
-                  className="mt-1 block w-full p-2 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
+                  className="mt-1 block w-full p-2 border text-gray-600 border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
                   {...register(`students[${currentStudentIndex}].name`, {
                     required: `El nombre del estudiante ${
                       currentStudentIndex + 1
@@ -348,14 +348,14 @@ export default function CreateGroup() {
               <div>
                 <label
                   htmlFor={`students[${currentStudentIndex}].listNumber`}
-                  className="block text-sm font-medium text-gray-700"
+                  className="block text-sm font-medium"
                 >
                   Número de Lista
                 </label>
                 <input
                   type="number"
                   id={`students[${currentStudentIndex}].listNumber`}
-                  className="mt-1 block w-full p-2 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
+                  className="mt-1 block w-full p-2 border text-gray-600 border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
                   value={currentStudentIndex + 1} // El número de lista es automático
                   readOnly
                 />
@@ -363,7 +363,7 @@ export default function CreateGroup() {
 
               <button
                 type="button"
-                className="mt-4 w-full p-2 bg-blue-500 text-white rounded-md hover:bg-blue-600"
+                className="mt-4 w-full p-2 bg-yellow-500 text-white rounded-md hover:bg-yellow-600"
                 onClick={handleNextStudent}
               >
                 {currentStudentIndex < studentFields.length - 1
@@ -461,7 +461,7 @@ export default function CreateGroup() {
 
           <button
             type="submit"
-            className="mt-4 w-full p-2 bg-blue-500 text-white rounded-md hover:bg-blue-600"
+            className="mt-4 w-full p-2 bg-green-500 text-white rounded-md hover:bg-green-600"
           >
             Crear Grupo
           </button>

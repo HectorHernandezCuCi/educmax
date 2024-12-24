@@ -36,6 +36,7 @@ model Group {
   
   studentGroups StudentGroup[] // Relación muchos a muchos con estudiantes
   teacherGroups TeacherGroup[] // Relación con los profesores
+  posts     Post[]   // Relación con los posts pertenecientes al grupo
 }
 
 model Student {
@@ -72,8 +73,10 @@ model Post {
   createdAt DateTime @default(now())
   userId    String   // Relaciona al usuario que creó el post
   filePath  String?  // Ruta del archivo subido
+  groupId   String?  // Relaciona al grupo al que pertenece el post
 
   user      User     @relation(fields: [userId], references: [id])
+  group     Group?   @relation(fields: [groupId], references: [id])
   likes     Like[]   // Relación con los likes recibidos por el post
   comments  Comment[]      // Relación con los comentarios recibidos por el post
 }
