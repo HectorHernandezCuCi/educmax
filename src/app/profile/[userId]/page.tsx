@@ -7,6 +7,7 @@ import Search from "@/components/resources/search";
 import PencilAnimation from "@/components/loader/PencilAnimation";
 import { useRouter, usePathname } from "next/navigation";
 import schoolIcon from "@/img/backToschool.png";
+import heartIcon from "@/img/heart.png";
 
 export default function Profile() {
   const { data: session } = useSession();
@@ -78,9 +79,9 @@ export default function Profile() {
     : filteredPosts;
 
   const downloadFile = (filePath) => {
-    const link = document.createElement('a');
+    const link = document.createElement("a");
     link.href = filePath;
-    link.download = filePath.split('/').pop();
+    link.download = filePath.split("/").pop();
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
@@ -89,7 +90,9 @@ export default function Profile() {
   if (!session?.user) {
     return (
       <div className="min-h-screen flex items-center justify-center">
-        <p className="text-xl">Por favor, inicia sesión para ver tu perfil.</p>
+        <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-50">
+          <PencilAnimation />
+        </div>
       </div>
     );
   }
@@ -109,7 +112,7 @@ export default function Profile() {
           <PencilAnimation />
         </div>
       )}
-      <div className={`min-h-screen pb-10 ${loading ? 'opacity-50' : ''}`}>
+      <div className={`min-h-screen pb-10 ${loading ? "opacity-50" : ""}`}>
         <div className="m-8 flex items-center justify-center p-8 space-x-8 bg-white shadow rounded-lg">
           {/* Profile Picture */}
           <div className="flex-shrink-0">
@@ -128,7 +131,9 @@ export default function Profile() {
           </div>
           {/* User Data */}
           <div>
-            <h1 className="text-3xl font-bold uppercase">{profileData?.name + " " + profileData?.lastname || "Cargando..."}</h1>
+            <h1 className="text-3xl font-bold uppercase">
+              {profileData?.name + " " + profileData?.lastname || "Cargando..."}
+            </h1>
           </div>
         </div>
         {/* User Posts */}
@@ -156,12 +161,7 @@ export default function Profile() {
                   key={post.id}
                   className="bg-white border rounded-lg shadow-md p-4 mb-6 "
                 >
-                  <div className="flex justify-between items-center mb-3">
-                    <h3 className="text-gray-800 font-semibold text-lg truncate">
-                      Publicación #{post.id}
-                    </h3>
-                  </div>
-                  <p className="text-gray-600 text-sm leading-relaxed mb-4">
+                  <p className="text-gray-800 font-semibold text-lg truncate">
                     {post.content}
                   </p>
                   {post.filePath && (
@@ -187,13 +187,14 @@ export default function Profile() {
                       )}
                     </div>
                   )}
-                  <p className="text-gray-500 text-xs">
-                    Likes: {post.likes.length}
+                  <p className="text-gray-500 text-xs flex items-center">
+                    <Image src={heartIcon} alt="Likes" width={16} height={16} className="mr-1" />
+                    {post.likes.length}
                   </p>
                 </div>
               ))
             ) : (
-              <p>No has realizado ningún post.</p>
+              <p>No ha realizado ningún post.</p>
             )}
           </div>
         </div>

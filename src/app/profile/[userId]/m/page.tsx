@@ -37,9 +37,12 @@ export default function Profile() {
   const fetchLikedPosts = useCallback(async () => {
     try {
       const response = await fetch(`/api/user/${session.user.id}/liked-posts`);
-      if (response.status === 404) {
-        console.error("Liked posts not found");
-        return;
+      if (!response.ok) {
+        if (response.status === 404) {
+          console.error("Liked posts not found");
+          return;
+        }
+        throw new Error(`HTTP error! status: ${response.status}`);
       }
       const data = await response.json();
       setLikedPosts(data.likedPosts);
@@ -123,7 +126,9 @@ export default function Profile() {
   if (!session?.user) {
     return (
       <div className="min-h-screen flex items-center justify-center">
-        <p className="text-xl">Por favor, inicia sesión para ver tu perfil.</p>
+        <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-50">
+          <PencilAnimation />
+        </div>
       </div>
     );
   }
@@ -179,13 +184,17 @@ export default function Profile() {
         <div className="mt-4 md:mt-8 m-4 md:m-8 bg-white p-4 md:p-5 rounded-lg">
           <div className="flex md:hidden justify-around mb-4">
             <button
-              className={`px-4 py-2 rounded ${showPosts ? "bg-green-500 text-white" : "bg-green-300"}`}
+              className={`px-4 py-2 rounded ${
+                showPosts ? "bg-green-500 text-white" : "bg-green-300"
+              }`}
               onClick={() => setShowPosts(true)}
             >
               Mis Posts
             </button>
             <button
-              className={`px-4 py-2 rounded ${!showPosts ? "bg-red-500 text-white" : "bg-red-300"}`}
+              className={`px-4 py-2 rounded ${
+                !showPosts ? "bg-red-500 text-white" : "bg-red-300"
+              }`}
               onClick={() => setShowPosts(false)}
             >
               <Image src={heartIcon} alt="Likes" width={16} height={16} />
@@ -193,7 +202,11 @@ export default function Profile() {
           </div>
           <div className="flex flex-col md:flex-row">
             {/* User Posts */}
-            <div className={`w-full md:w-1/2 ${!showPosts && "hidden md:block"} pr-0 md:pr-4`}>
+            <div
+              className={`w-full md:w-1/2 ${
+                !showPosts && "hidden md:block"
+              } pr-0 md:pr-4`}
+            >
               <h2 className="text-xl md:text-2xl font-bold mb-4">Mis Posts</h2>
               <div className="flex flex-col md:flex-row items-center justify-between">
                 <Search onSearch={handleSearch} />
@@ -217,12 +230,7 @@ export default function Profile() {
                       key={post.id}
                       className="bg-white border rounded-lg shadow-md p-4 mb-6"
                     >
-                      <div className="flex justify-between items-center mb-3">
-                        <h3 className="text-gray-800 font-semibold text-lg truncate">
-                          Publicación #{post.id}
-                        </h3>
-                      </div>
-                      <p className="text-gray-600 text-sm leading-relaxed mb-4">
+                      <p className="text-gray-800 font-semibold text-lg truncate">
                         {post.content}
                       </p>
                       {post.filePath && (
@@ -249,7 +257,12 @@ export default function Profile() {
                         </div>
                       )}
                       <div className="flex items-center text-gray-500 text-xs">
-                        <Image src={heartIcon} alt="Likes" width={16} height={16} />
+                        <Image
+                          src={heartIcon}
+                          alt="Likes"
+                          width={16}
+                          height={16}
+                        />
                         <span className="ml-1">{post.likes.length}</span>
                       </div>
                     </div>
@@ -260,8 +273,14 @@ export default function Profile() {
               </div>
             </div>
             {/* Liked Posts */}
-            <div className={`w-full md:w-1/2 ${showPosts && "hidden md:block"} pl-0 md:pl-4 mt-4 md:mt-0`}>
-              <h2 className="text-xl md:text-2xl font-bold mb-4">Posts que me gustan</h2>
+            <div
+              className={`w-full md:w-1/2 ${
+                showPosts && "hidden md:block"
+              } pl-0 md:pl-4 mt-4 md:mt-0`}
+            >
+              <h2 className="text-xl md:text-2xl font-bold mb-4">
+                Posts que me gustan
+              </h2>
               <div className="space-y-4">
                 {likedPosts.length > 0 ? (
                   likedPosts.map((post) => (
@@ -269,12 +288,8 @@ export default function Profile() {
                       key={post.id}
                       className="bg-white border rounded-lg shadow-md p-4 mb-6"
                     >
-                      <div className="flex justify-between items-center mb-3">
-                        <h3 className="text-gray-800 font-semibold text-lg truncate">
-                          Publicación #{post.id}
-                        </h3>
-                      </div>
-                      <p className="text-gray-600 text-sm leading-relaxed mb-4">
+                      <div className="flex justify-between items-center mb-3"></div>
+                      <p className="text-gray-800 font-semibold text-lg truncate">
                         {post.content}
                       </p>
                       {post.filePath && (
@@ -301,7 +316,12 @@ export default function Profile() {
                         </div>
                       )}
                       <div className="flex items-center text-gray-500 text-xs">
-                        <Image src={heartIcon} alt="Likes" width={16} height={16} />
+                        <Image
+                          src={heartIcon}
+                          alt="Likes"
+                          width={16}
+                          height={16}
+                        />
                         <span className="ml-1">{post.likes.length}</span>
                       </div>
                     </div>

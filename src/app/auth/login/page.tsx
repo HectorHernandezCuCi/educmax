@@ -19,6 +19,12 @@ function LoginPage() {
   const [error, setError] = useState(null);
 
   const onSubmit = handleSubmit(async (data) => {
+    // Validación adicional del lado del cliente
+    if (!data.email || !data.password) {
+      setError("Todos los campos son obligatorios");
+      return;
+    }
+
     const res = await signIn("credentials", {
       email: data.email,
       password: data.password,
@@ -80,6 +86,10 @@ function LoginPage() {
                 value: true,
                 message: "Ingresa tu correo",
               },
+              pattern: {
+                value: /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,4}$/,
+                message: "Correo no válido",
+              },
             })}
             className="flex-1 p-2 bg-transparent focus:outline-none text-slate-300"
             placeholder="user@email.com"
@@ -105,6 +115,10 @@ function LoginPage() {
               required: {
                 value: true,
                 message: "Ingresa tu contraseña",
+              },
+              minLength: {
+                value: 6,
+                message: "La contraseña debe tener al menos 6 caracteres",
               },
             })}
             className="flex-1 p-2 bg-transparent focus:outline-none text-slate-300"
