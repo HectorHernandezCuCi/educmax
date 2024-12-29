@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useRef } from "react";
 import { useParams, useRouter } from "next/navigation";
+import { signOut } from "next-auth/react";
 
 export default function EditProfile() {
   const { userId } = useParams();
@@ -16,6 +17,8 @@ export default function EditProfile() {
     email: "",
     password: "",
   });
+
+  const [isEmailDisabled, setIsEmailDisabled] = useState(true);
 
   useEffect(() => {
     const fetchUserData = async () => {
@@ -47,10 +50,19 @@ export default function EditProfile() {
     setFormData({ ...formData, [name]: value });
   };
 
+  const handleEmailClick = () => {
+    const password = prompt("Please enter your password to change email:");
+    if (password) {
+      setFormData({ ...formData, password });
+      setIsEmailDisabled(false);
+    } else {
+      alert("Password is required to change email");
+    }
+  };
+
   const handleEmailChange = (e) => {
     const newEmail = e.target.value;
-    const password = prompt("Please enter your password to change email:");
-    setFormData({ ...formData, email: newEmail, password });
+    setFormData({ ...formData, email: newEmail });
   };
 
   const handleProfilePictureChange = async (e) => {
@@ -84,6 +96,32 @@ export default function EditProfile() {
   const notifyProfilePage = () => {
     const event = new CustomEvent("profileUpdated");
     window.dispatchEvent(event);
+  };
+
+  const handleEmailButtonClick = async () => {
+    const password = prompt("Please enter your password to change email:");
+    if (password) {
+      try {
+        const response = await fetch(`/api/verify-password`, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({ userId, password }),
+        });
+
+        if (response.ok) {
+          setIsEmailDisabled(false);
+        } else {
+          alert("Incorrect password");
+        }
+      } catch (error) {
+        console.error("Error verifying password:", error);
+        alert("Error verifying password");
+      }
+    } else {
+      alert("Password is required to change email");
+    }
   };
 
   const handleSubmit = async (e) => {
@@ -126,6 +164,15 @@ export default function EditProfile() {
     }
   };
 
+  const handleLogout = async () => {
+    try {
+      await signOut({ callbackUrl: '/auth/login' });
+    } catch (error) {
+      console.error('Error logging out:', error);
+      alert('Error logging out');
+    }
+  };
+
   return (
     <form
       className="max-w-md mx-auto bg-white p-6 rounded-lg shadow-lg space-y-6"
@@ -141,19 +188,22 @@ export default function EditProfile() {
         {formData.profilePicture && (
           <img
             src={formData.profilePicture}
-            alt="Profile"
+            alt="Perfil"
             onClick={handleProfilePictureClick}
             className="cursor-pointer w-24 h-24 object-cover border-2 border-gray-300 rounded-full mx-auto hover:border-blue-500"
           />
         )}
         <p className="mt-2 text-sm text-gray-500">
-          Click to change profile picture
+          Haz clic para cambiar la foto de perfil
         </p>
       </div>
       <div className="space-y-4">
         <div>
-          <label htmlFor="name" className="block text-sm font-medium text-gray-700">
-            Name
+          <label
+            htmlFor="name"
+            className="block text-sm font-medium text-gray-700"
+          >
+            Nombre
           </label>
           <input
             type="text"
@@ -166,8 +216,11 @@ export default function EditProfile() {
           />
         </div>
         <div>
-          <label htmlFor="lastname" className="block text-sm font-medium text-gray-700">
-            Lastname
+          <label
+            htmlFor="lastname"
+            className="block text-sm font-medium text-gray-700"
+          >
+            Apellido
           </label>
           <input
             type="text"
@@ -180,8 +233,11 @@ export default function EditProfile() {
           />
         </div>
         <div>
-          <label htmlFor="age" className="block text-sm font-medium text-gray-700">
-            Age
+          <label
+            htmlFor="age"
+            className="block text-sm font-medium text-gray-700"
+          >
+            Edad
           </label>
           <input
             type="number"
@@ -194,8 +250,11 @@ export default function EditProfile() {
           />
         </div>
         <div>
-          <label htmlFor="email" className="block text-sm font-medium text-gray-700">
-            Email
+          <label
+            htmlFor="email"
+            className="block text-sm font-medium text-gray-700"
+          >
+            Correo Electrónico
           </label>
           <input
             type="email"
@@ -203,9 +262,17 @@ export default function EditProfile() {
             name="email"
             value={formData.email}
             onChange={handleEmailChange}
+            disabled={isEmailDisabled}
             required
             className="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500"
           />
+          <button
+            type="button"
+            onClick={handleEmailButtonClick}
+            className="mt-2 bg-blue-500 text-white py-1 px-3 rounded-md shadow hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
+          >
+            Cambiar Correo
+          </button>
         </div>
       </div>
       <div className="text-center">
@@ -213,7 +280,14 @@ export default function EditProfile() {
           type="submit"
           className="w-full bg-blue-500 text-white py-2 px-4 rounded-md shadow hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
         >
-          Update Profile
+          Actualizar Perfil
+        </button>
+        <button
+          type="button"
+          onClick={handleLogout}
+          className="w-full mt-4 bg-red-500 text-white py-2 px-4 rounded-md shadow hover:bg-red-600 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2"
+        >
+          Cerrar Sesión
         </button>
       </div>
     </form>

@@ -138,7 +138,18 @@ const Resources = () => {
           setMessage("Solo se permiten archivos PDF, imágenes y videos.");
           return;
         }
+
+        let folder = "";
+        if (file.type === "application/pdf") {
+          folder = "PDF";
+        } else if (file.type.startsWith("image/")) {
+          folder = "Image";
+        } else if (file.type === "video/mp4") {
+          folder = "Video";
+        }
+
         formData.append("file", file);
+        formData.append("folder", `upload/${userId}/${folder}`);
       }
 
       const response = await fetch("/api/post", {
