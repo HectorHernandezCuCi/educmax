@@ -1,165 +1,221 @@
 "use client";
-import React, { useState, useEffect, useRef } from "react";
-import axios from "axios";
-import { signOut, useSession } from "next-auth/react";
-import { useRouter } from "next/navigation";
 
-export default function EditProfile({ userId }) {
-  const { data: session } = useSession();
+import { useState, useEffect, useRef } from "react";
+import { useParams, useRouter } from "next/navigation";
+
+export default function EditProfile() {
+  const { userId } = useParams();
   const router = useRouter();
-  const [user, setUser] = useState({
-    name: "",
-    lastname: "",
-    email: "",
-    profilePicture: "",
-  });
-  const [error, setError] = useState("");
   const fileInputRef = useRef(null);
 
+  const [formData, setFormData] = useState({
+    name: "",
+    lastname: "",
+    profilePicture: "",
+    age: "",
+    email: "",
+    password: "",
+  });
+
   useEffect(() => {
-    const fetchUserId = async () => {
-      if (!userId) {
-        try {
-          const response = await axios.get("/api/auth/session");
-          userId = response.data.user.id;
-        } catch (error) {
-          setError("Error al obtener la sesión del usuario");
-          return;
+    const fetchUserData = async () => {
+      try {
+        const response = await fetch(`/api/user/${userId}`);
+        if (response.ok) {
+          const { user } = await response.json();
+          setFormData({
+            name: user.name || "",
+            lastname: user.lastname || "",
+            profilePicture: user.profilePicture || "",
+            age: user.age || "",
+            email: user.email || "",
+            password: "",
+          });
+        } else {
+          console.error("Error fetching user data");
         }
+      } catch (error) {
+        console.error("Error fetching user data:", error);
       }
-
-      // Verificación de usuario logueado
-      if (session?.user) {
-        const loggedInUserId = session.user.id;
-        console.log("session.user.id:", loggedInUserId);
-        console.log("userId from URL:", userId);
-        if (loggedInUserId !== userId) {
-          console.error("User ID does not match");
-          router.push("/unauthorized");
-          return;
-        }
-      }
-
-      // Fetch user data
-      axios
-        .get(`/api/user/${userId}`)
-        .then((response) => setUser(response.data.user))
-        .catch((error) => {
-          console.error("Error al obtener los datos del usuario:", error);
-          if (error.response && error.response.status === 404) {
-            setError("Usuario no encontrado");
-          } else {
-            setError("Error al obtener los datos del usuario");
-          }
-        });
     };
 
-    fetchUserId();
-  }, [userId, session, router]);
+    fetchUserData();
+  }, [userId]);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
-    setUser((prevState) => ({ ...prevState, [name]: value }));
+    setFormData({ ...formData, [name]: value });
   };
 
-  const handleFileChange = (e) => {
+  const handleEmailChange = (e) => {
+    const newEmail = e.target.value;
+    const password = prompt("Please enter your password to change email:");
+    setFormData({ ...formData, email: newEmail, password });
+  };
+
+  const handleProfilePictureChange = async (e) => {
     const file = e.target.files[0];
-    const reader = new FileReader();
-    reader.onloadend = () => {
-      setUser((prevState) => ({ ...prevState, profilePicture: reader.result }));
-    };
     if (file) {
+      const reader = new FileReader();
+      reader.onloadend = async () => {
+        const base64String = reader.result;
+        try {
+          const response = await fetch("/api/upload", {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify({ file: base64String }),
+          });
+          const data = await response.json();
+          setFormData({ ...formData, profilePicture: data.url });
+        } catch (error) {
+          console.error("Error uploading profile picture:", error);
+        }
+      };
       reader.readAsDataURL(file);
     }
   };
 
-  const handleSubmit = (e) => {
-    e.preventDefault();
-    // Update user data
-    axios
-      .put(`/api/user/${userId}`, user)
-      .then((response) => alert("Perfil actualizado con éxito"))
-      .catch((error) => console.error("Error al actualizar el perfil:", error));
+  const handleProfilePictureClick = () => {
+    fileInputRef.current.click();
   };
 
-  const handleLogout = () => {
-    signOut()
-      .then(() => {
-        window.location.href = '/auth/login';
-      })
-      .catch(error => {
-        console.error('Error al cerrar sesión:', error);
-        setError('Error al cerrar sesión');
+  const notifyProfilePage = () => {
+    const event = new CustomEvent("profileUpdated");
+    window.dispatchEvent(event);
+  };
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    console.log("Submitting data:", formData);
+    try {
+      const response = await fetch(`/api/user/${userId}`, {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(formData),
       });
+
+      if (response.ok) {
+        alert("Profile updated successfully!");
+        notifyProfilePage(); // Notify profile page about the update
+        // Fetch updated user data
+        const updatedResponse = await fetch(`/api/user/${userId}`);
+        if (updatedResponse.ok) {
+          const { user } = await updatedResponse.json();
+          setFormData({
+            name: user.name || "",
+            lastname: user.lastname || "",
+            profilePicture: user.profilePicture || "",
+            age: user.age || "",
+            email: user.email || "",
+            password: "",
+          });
+          // Redirect to profile page
+          router.push(`/profile/${userId}`);
+        }
+      } else {
+        const errorData = await response.json();
+        alert(`Error: ${errorData.error}`);
+      }
+    } catch (error) {
+      console.error("Error updating profile:", error);
+      alert("Error updating profile");
+    }
   };
 
   return (
-    <div className="max-w-2xl mx-auto p-6 bg-white rounded-lg shadow-md">
-      <h1 className="text-2xl font-bold mb-6 text-center">Editar Perfil</h1>
-      {error && <p className="text-red-500 text-center mb-4">{error}</p>}
-      <form onSubmit={handleSubmit} className="space-y-6">
-        <div className="flex flex-col items-center">
-          <label htmlFor="profilePicture" className="text-lg font-medium mb-2">Foto de Perfil</label>
-          <input
-            type="file"
-            id="profilePicture"
-            name="profilePicture"
-            accept="image/*"
-            ref={fileInputRef}
-            onChange={handleFileChange}
-            className="hidden"
+    <form
+      className="max-w-md mx-auto bg-white p-6 rounded-lg shadow-lg space-y-6"
+      onSubmit={handleSubmit}
+    >
+      <div className="text-center">
+        <input
+          type="file"
+          ref={fileInputRef}
+          className="hidden"
+          onChange={handleProfilePictureChange}
+        />
+        {formData.profilePicture && (
+          <img
+            src={formData.profilePicture}
+            alt="Profile"
+            onClick={handleProfilePictureClick}
+            className="cursor-pointer w-24 h-24 object-cover border-2 border-gray-300 rounded-full mx-auto hover:border-blue-500"
           />
-          {user.profilePicture && (
-            <img
-              src={user.profilePicture}
-              alt="Perfil"
-              className="w-32 h-32 rounded-full object-cover cursor-pointer"
-              onClick={() => fileInputRef.current.click()}
-            />
-          )}
-        </div>
-        <div className="form-group">
-          <label htmlFor="name" className="block text-lg font-medium mb-2">Nombre</label>
+        )}
+        <p className="mt-2 text-sm text-gray-500">
+          Click to change profile picture
+        </p>
+      </div>
+      <div className="space-y-4">
+        <div>
+          <label htmlFor="name" className="block text-sm font-medium text-gray-700">
+            Name
+          </label>
           <input
             type="text"
             id="name"
             name="name"
-            value={user.name}
+            value={formData.name}
             onChange={handleChange}
             required
-            className="w-full p-3 border border-gray-300 rounded-lg"
+            className="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500"
           />
         </div>
-        <div className="form-group">
-          <label htmlFor="lastname" className="block text-lg font-medium mb-2">Apellido</label>
+        <div>
+          <label htmlFor="lastname" className="block text-sm font-medium text-gray-700">
+            Lastname
+          </label>
           <input
             type="text"
             id="lastname"
             name="lastname"
-            value={user.lastname}
+            value={formData.lastname}
             onChange={handleChange}
             required
-            className="w-full p-3 border border-gray-300 rounded-lg"
+            className="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500"
           />
         </div>
-        <div className="form-group">
-          <label htmlFor="email" className="block text-lg font-medium mb-2">Correo Electrónico</label>
+        <div>
+          <label htmlFor="age" className="block text-sm font-medium text-gray-700">
+            Age
+          </label>
+          <input
+            type="number"
+            id="age"
+            name="age"
+            value={formData.age}
+            onChange={handleChange}
+            required
+            className="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500"
+          />
+        </div>
+        <div>
+          <label htmlFor="email" className="block text-sm font-medium text-gray-700">
+            Email
+          </label>
           <input
             type="email"
             id="email"
             name="email"
-            value={user.email}
-            disabled
-            className="w-full p-3 border border-gray-300 rounded-lg bg-gray-100"
+            value={formData.email}
+            onChange={handleEmailChange}
+            required
+            className="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500"
           />
         </div>
-        <button type="submit" className="w-full py-3 bg-blue-600 text-white font-bold rounded-lg hover:bg-blue-700 transition duration-300">
-          Guardar Cambios
+      </div>
+      <div className="text-center">
+        <button
+          type="submit"
+          className="w-full bg-blue-500 text-white py-2 px-4 rounded-md shadow hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
+        >
+          Update Profile
         </button>
-        <button type="button" onClick={handleLogout} className="w-full py-3 mt-4 bg-red-600 text-white font-bold rounded-lg hover:bg-red-700 transition duration-300">
-          Cerrar Sesión
-        </button>
-      </form>
-    </div>
+      </div>
+    </form>
   );
 }

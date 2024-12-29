@@ -51,6 +51,43 @@ export default function Profile() {
     }
   }, [session]);
 
+  const fetchUserData = useCallback(async () => {
+    try {
+      const response = await fetch(`/api/user/${session.user.id}`);
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+      const userData = await response.json();
+      console.log(userData);
+      // Actualiza el estado del usuario con los datos obtenidos
+      session.user = userData.user;
+      setLoading(false);
+    } catch (err) {
+      console.error("Error fetching user data:", err);
+    } finally {
+      setLoading(false);
+    }
+  }, [session]);
+
+  const updateUserData = async (updatedData) => {
+    try {
+      const response = await fetch(`/api/user/${session.user.id}`, {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(updatedData),
+      });
+      if (response.ok) {
+        fetchUserData(); // Re-fetch user data after successful update
+      } else {
+        console.error("Failed to update user data");
+      }
+    } catch (error) {
+      console.error("Error updating user data:", error);
+    }
+  };
+
   useEffect(() => {
     if (session?.user) {
       const userId = window.location.pathname.split("/")[2];
@@ -66,27 +103,23 @@ export default function Profile() {
         return;
       }
 
-      const fetchProfile = async () => {
-        try {
-          const response = await fetch(`/api/user/${session.user.id}`);
-          if (!response.ok) {
-            throw new Error(`HTTP error! status: ${response.status}`);
-          }
-          const userData = await response.json();
-          console.log(userData);
-          setLoading(false);
-        } catch (err) {
-          console.error("Error fetching user data:", err);
-        } finally {
-          setLoading(false);
-        }
-      };
-
-      fetchProfile();
+      fetchUserData();
       fetchPosts();
       fetchLikedPosts();
     }
-  }, [session, fetchPosts, fetchLikedPosts, router]);
+  }, [session, fetchPosts, fetchLikedPosts, fetchUserData, router]);
+
+  useEffect(() => {
+    const handleProfileUpdate = () => {
+      fetchUserData();
+    };
+
+    window.addEventListener("profileUpdated", handleProfileUpdate);
+
+    return () => {
+      window.removeEventListener("profileUpdated", handleProfileUpdate);
+    };
+  }, [fetchUserData]);
 
   const handleSearch = (query) => {
     if (query.trim() === "") {
@@ -115,6 +148,7 @@ export default function Profile() {
       if (response.ok) {
         setPosts(posts.filter((post) => post.id !== postId));
         setFilteredPosts(filteredPosts.filter((post) => post.id !== postId));
+        fetchUserData(); // Re-fetch user data after successful update
       } else {
         console.error("Failed to delete post");
       }
@@ -164,7 +198,7 @@ export default function Profile() {
           {/* User Data */}
           <div>
             <h1 className="text-2xl md:text-3xl font-bold uppercase">
-              {session.user.name}
+              {session.user.name} {session.user.lastname}
             </h1>
           </div>
           {/* Configuration Icon */}

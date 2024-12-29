@@ -21,6 +21,7 @@ export function HeaderPrincipal() {
           const response = await fetch(`/api/user/${session.user.id}`);
           const userData = await response.json();
           console.log(userData);
+          session.user = userData.user; // Actualiza los datos del usuario en la sesión
           setLoading(false);
         } catch (err) {
           console.error("Error fetching user data:", err);
@@ -31,6 +32,33 @@ export function HeaderPrincipal() {
 
       fetchProfile();
     }
+  }, [session]);
+
+  useEffect(() => {
+    const handleProfileUpdate = () => {
+      if (session?.user) {
+        const fetchProfile = async () => {
+          try {
+            const response = await fetch(`/api/user/${session.user.id}`);
+            const userData = await response.json();
+            session.user = userData.user; // Actualiza los datos del usuario en la sesión
+            setLoading(false);
+          } catch (err) {
+            console.error("Error fetching user data:", err);
+          } finally {
+            setLoading(false);
+          }
+        };
+
+        fetchProfile();
+      }
+    };
+
+    window.addEventListener("profileUpdated", handleProfileUpdate);
+
+    return () => {
+      window.removeEventListener("profileUpdated", handleProfileUpdate);
+    };
   }, [session]);
 
   // Función para alternar el estado del menú móvil

@@ -2,6 +2,7 @@
 import { useEffect, useState, useCallback, useMemo } from "react";
 import { useForm } from "react-hook-form";
 import { useRouter } from "next/navigation";
+import { useSession } from "next-auth/react"; // Import useSession
 import dynamic from "next/dynamic";
 import axios from "axios";
 import LikeButton from "@/components/resources/likeButton";
@@ -17,6 +18,7 @@ import heartIcon from "@/img/heart.png";
 const Picker = dynamic(() => import("emoji-picker-react"), { ssr: false });
 
 const Resources = () => {
+  const { data: session } = useSession(); // Use useSession to get session data
   const {
     register,
     handleSubmit,
@@ -104,6 +106,18 @@ const Resources = () => {
     fetchGroups();
     fetchPosts();
   }, [fetchUserData, fetchGroups, fetchPosts]);
+
+  useEffect(() => {
+    const handleProfileUpdate = () => {
+      fetchUserData();
+    };
+
+    window.addEventListener("profileUpdated", handleProfileUpdate);
+
+    return () => {
+      window.removeEventListener("profileUpdated", handleProfileUpdate);
+    };
+  }, [fetchUserData]);
 
   const onSubmit = async (data) => {
     try {
@@ -361,7 +375,11 @@ const Resources = () => {
             <span>{post._count.likes} Likes</span>
           ) : (
             <div className="flex items-center">
-              <Image src={heartIcon} alt="Heart Icon" className="w-5 h-5 mr-2" />
+              <Image
+                src={heartIcon}
+                alt="Heart Icon"
+                className="w-5 h-5 mr-2"
+              />
               <span>{post._count.likes}</span>
             </div>
           )}
@@ -369,6 +387,14 @@ const Resources = () => {
       </div>
     ));
   }, [filteredPosts, userId]);
+
+  if (!session) {
+    return (
+      <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-50">
+        <PencilAnimation />
+      </div>
+    );
+  }
 
   return (
     <div className="relative">
@@ -438,9 +464,10 @@ const Resources = () => {
               className="flex flex-col space-y-4"
             >
               <div className="flex items-center space-x-4">
-                {profilePicture && (
+                {session.user.profilePicture && (
                   <Image
-                    src={profilePicture}
+                    key={session.user.profilePicture} // Add key to force re-render
+                    src={session.user.profilePicture}
                     alt="User"
                     className="w-10 h-10 rounded-full"
                     width={40} // Add width property

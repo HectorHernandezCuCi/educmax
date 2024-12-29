@@ -8,6 +8,7 @@ import PencilAnimation from "@/components/loader/PencilAnimation";
 import { useRouter, usePathname } from "next/navigation";
 import schoolIcon from "@/img/backToschool.png";
 import heartIcon from "@/img/heart.png";
+import LikeButton from "@/components/resources/likeButton";
 
 export default function Profile() {
   const { data: session } = useSession();
@@ -59,6 +60,34 @@ export default function Profile() {
     }
   }, [userId, fetchPosts]);
 
+  useEffect(() => {
+    const handleProfileUpdate = () => {
+      if (userId) {
+        const fetchProfile = async () => {
+          try {
+            const response = await fetch(`/api/user/${userId}`);
+            if (response.status === 404) {
+              console.error("User not found");
+              return;
+            }
+            const userData = await response.json();
+            setProfileData(userData.user); // Access the nested user object
+          } catch (err) {
+            console.error("Error fetching user data:", err);
+          }
+        };
+
+        fetchProfile();
+      }
+    };
+
+    window.addEventListener("profileUpdated", handleProfileUpdate);
+
+    return () => {
+      window.removeEventListener("profileUpdated", handleProfileUpdate);
+    };
+  }, [userId]);
+
   const handleSearch = (query) => {
     if (query.trim() === "") {
       setFilteredPosts(posts);
@@ -85,6 +114,34 @@ export default function Profile() {
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
+  };
+
+  const likePost = async (postId) => {
+    if (!session?.user?.id) {
+      console.error("Debes iniciar sesión para dar like a los posts");
+      return;
+    }
+
+    try {
+      const response = await fetch("/api/post", {
+        method: "PATCH",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ postId, userId: session.user.id }),
+      });
+
+      if (response.status === 200) {
+        const result = await response.json();
+        console.log(result.message || "Post liked exitosamente");
+        fetchPosts(); // Refresh posts after successful like/unlike
+      } else {
+        const result = await response.json();
+        console.error(result.error || "Error al dar like al post");
+      }
+    } catch (error) {
+      console.error("Error liking post:", error);
+    }
   };
 
   if (!session?.user) {
@@ -187,10 +244,18 @@ export default function Profile() {
                       )}
                     </div>
                   )}
-                  <p className="text-gray-500 text-xs flex items-center">
-                    <Image src={heartIcon} alt="Likes" width={16} height={16} className="mr-1" />
-                    {post.likes.length}
-                  </p>
+                  <div className="flex items-center gap-5">
+                    {session?.user?.id && (
+                      <LikeButton
+                        isLiked={post.likes.some((like) => like.userId === session.user.id)}
+                        onClick={() => likePost(post.id)}
+                      />
+                    )}
+                    <p className="text-gray-500 text-xs flex items-center">
+                      <Image src={heartIcon} alt="Likes" width={16} height={16} className="mr-1" />
+                      {post.likes.length}
+                    </p>
+                  </div>
                 </div>
               ))
             ) : (
