@@ -4,7 +4,7 @@ import bcrypt from "bcrypt";
 import cloudinary from "@/libs/cloudinary";
 
 export async function GET(req, { params }) {
-  const { userId } = params;
+  const { userId } = await params; // Await params here
 
   try {
     const user = await db.user.findUnique({
@@ -26,13 +26,16 @@ export async function GET(req, { params }) {
     return NextResponse.json({ user }, { status: 200 });
   } catch (error) {
     console.error("Error fetching user data:", error);
-    return NextResponse.json({ error: "Error fetching user data" }, { status: 500 });
+    return NextResponse.json(
+      { error: "Error fetching user data" },
+      { status: 500 }
+    );
   }
 }
 
 // New route to fetch liked posts by user
 export async function GET_LIKED_POSTS(req, { params }) {
-  const { userId } = params;
+  const { userId } = await params; // Await params here
 
   try {
     const likedPosts = await db.post.findMany({
@@ -67,10 +70,28 @@ export async function GET_LIKED_POSTS(req, { params }) {
 }
 
 export async function PUT(req, { params }) {
-  const { userId } = params;
-  const { name, lastname, profilePicture, age, email, password } = await req.json();
+  const { userId } = await params; // Await params here
+  const { name, lastname, profilePicture, age, email, password } =
+    await req.json();
 
-  console.log("Received data:", { name, lastname, profilePicture, age, email, password });
+  // Convert age to an integer
+  const ageInt = parseInt(age, 10); // Parse age as an integer
+
+  if (isNaN(ageInt)) {
+    return NextResponse.json(
+      { error: "Invalid age provided" },
+      { status: 400 }
+    );
+  }
+
+  console.log("Received data:", {
+    name,
+    lastname,
+    profilePicture,
+    age,
+    email,
+    password,
+  });
 
   try {
     const user = await db.user.findUnique({ where: { id: userId } });
@@ -82,16 +103,27 @@ export async function PUT(req, { params }) {
     if (email && password) {
       const isPasswordValid = await bcrypt.compare(password, user.password);
       if (!isPasswordValid) {
-        return NextResponse.json({ error: "Invalid password" }, { status: 401 });
+        return NextResponse.json(
+          { error: "Invalid password" },
+          { status: 401 }
+        );
       }
     }
 
     let profilePictureUrl = user.profilePicture;
     if (profilePicture) {
-      const uploadResult = await cloudinary.uploader.upload(profilePicture, {
-        folder: "profile_pictures",
-      });
-      profilePictureUrl = uploadResult.secure_url;
+      try {
+        const uploadResult = await cloudinary.uploader.upload(profilePicture, {
+          folder: "profile_pictures",
+        });
+        profilePictureUrl = uploadResult.secure_url;
+      } catch (uploadError) {
+        console.error("Error uploading profile picture:", uploadError);
+        return NextResponse.json(
+          { error: "Error uploading profile picture" },
+          { status: 500 }
+        );
+      }
     }
 
     const updatedUser = await db.user.update({
@@ -100,8 +132,8 @@ export async function PUT(req, { params }) {
         name,
         lastname,
         profilePicture: profilePictureUrl,
-        age,
-        email: email || user.email,
+        age: ageInt, // Pass the integer age
+        email: email || user.email, // Only update email if provided
       },
     });
 
@@ -109,7 +141,10 @@ export async function PUT(req, { params }) {
 
     return NextResponse.json({ user: updatedUser }, { status: 200 });
   } catch (error) {
-    console.error("Error updating user data:", error);
-    return NextResponse.json({ error: "Error updating user data" }, { status: 500 });
+    const errorMessage =
+      error instanceof Error ? error.message : "Error updating user data";
+    console.error("Error updating user data:", errorMessage);
+
+    return NextResponse.json({ error: errorMessage }, { status: 500 });
   }
 }

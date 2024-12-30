@@ -153,6 +153,9 @@ export default function EditProfile() {
           });
           // Redirect to profile page
           router.push(`/profile/${userId}`);
+        } else {
+          console.error("Error fetching updated user data:", updatedResponse.statusText);
+          alert("Error fetching updated user data");
         }
       } else {
         const errorData = await response.json();
