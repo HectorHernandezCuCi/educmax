@@ -21,7 +21,7 @@ The Resource section is the heart of EducMax, where educators like YOU can share
 📑 Filter by topic, grade, or type of resource to find the perfect fit for your classroom.
 💾 Download materials in just one click and use them in your lessons.
 
-
+![ResurcesPage](github/educmax resources.gif)
 
 🌟 Dive Into the World of Educators on EducMax! 🌟
 
@@ -31,6 +31,7 @@ On EducMax, collaboration is key! Not only can you explore incredible resources,
 👩‍🏫 Visit the profiles of other educators to see all the resources they’ve uploaded.
 🔎 Browse their collection to find lesson plans, activities, or tools that match your needs.
 
+![ResurcesPage](github/OtherProfile educmax.gif)
 
 🌟 Your Profile, Your Space on EducMax! 🌟
 
