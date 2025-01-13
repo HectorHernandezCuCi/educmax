@@ -5,7 +5,7 @@ Experience a Beautifully Designed Interface with EducMax! 🎨
 
 At EducMax, we believe that great ideas deserve a great space to shine. That’s why we’ve crafted a sleek, user-friendly interface that makes sharing and discovering resources a joy!
 
-![HomePage](educmax/github.gif)
+![HomePage](github/HomeEducMax.gif)
 
 📂 Welcome to the Resource Hub on EducMax! 🌟
 
