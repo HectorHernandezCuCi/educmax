@@ -41,6 +41,31 @@ const Resources = () => {
   const [activeFilter, setActiveFilter] = useState(null);
   const [loading, setLoading] = useState(true); // Add loading state
 
+  const renderVideoFromLink = (link) => {
+    // Verifica si el enlace es de YouTube
+    const youtubeRegex =
+      /(?:https?:\/\/)?(?:www\.)?(?:youtube\.com\/(?:[^\/]+\/[^\/]+\/|(?:v|e(?:mbed)?)\/|\S*?[?&]v=)|youtu\.be\/)([a-zA-Z0-9_-]{11})/;
+    const match = link.match(youtubeRegex);
+
+    if (match) {
+      const videoId = match[1]; // Extrae el video ID
+      return (
+        <div className="video-container">
+          <iframe
+            width="100%"
+            height="315"
+            src={`https://www.youtube.com/embed/${videoId}`}
+            frameBorder="0"
+            allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture"
+            allowFullScreen
+            title="YouTube Video"
+          ></iframe>
+        </div>
+      );
+    }
+    return null; // Si no es un enlace de YouTube, no se muestra nada
+  };
+
   const fetchUserData = useCallback(async () => {
     try {
       const response = await fetch("/api/auth/session");
@@ -332,6 +357,14 @@ const Resources = () => {
                 <source src={post.filePath} type="video/mp4" />
                 Your browser does not support the video tag.
               </video>
+            ) : post.filePath.endsWith(".mp4") ? (
+              <video controls width="100%">
+                <source src={post.filePath} type="video/mp4" />
+                Your browser does not support the video tag.
+              </video>
+            ) : post.filePath.includes("youtube.com") ||
+              post.filePath.includes("youtu.be") ? (
+              renderVideoFromLink(post.filePath) // Usa la función para mostrar el video de YouTube
             ) : (
               <img
                 src={post.filePath}
