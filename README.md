@@ -21,7 +21,7 @@ The Resource section is the heart of EducMax, where educators like YOU can share
 📑 Filter by topic, grade, or type of resource to find the perfect fit for your classroom.
 💾 Download materials in just one click and use them in your lessons.
 
-![ResurcesPage](github/educmax resources.gif)
+![ResurcesPage](github/educmaxresources.gif)
 
 🌟 Dive Into the World of Educators on EducMax! 🌟
 
@@ -31,7 +31,7 @@ On EducMax, collaboration is key! Not only can you explore incredible resources,
 👩‍🏫 Visit the profiles of other educators to see all the resources they’ve uploaded.
 🔎 Browse their collection to find lesson plans, activities, or tools that match your needs.
 
-![ResurcesPage](github/OtherProfile educmax.gif)
+![OtherProfile](github/OtherProfileeducmax.gif)
 
 🌟 Your Profile, Your Space on EducMax! 🌟
 
@@ -46,6 +46,8 @@ Your profile on EducMax is more than just a page – it’s your personal hub wh
 ❤️ Quickly find the resources you’ve given a like to.
 ⭐ Save time by revisiting materials you love without searching again.
 
+![UserPage](github/usereducmax.gif)
+
 🔑 Seamless Login & Register Experience on EducMax! 🚀
 
 Joining the EducMax community has never been easier! Whether you’re a first-time visitor or a returning educator, our Login and Register features are designed for simplicity and security.
@@ -58,4 +60,6 @@ Joining the EducMax community has never been easier! Whether you’re a first-ti
 ✨ Effortless Login
 🔓 Returning users can log in quickly with their email and password.
 🌐 Use social login options for one-click access.
+
+![RegisterLogin](github/registereducmax.gif)
 
