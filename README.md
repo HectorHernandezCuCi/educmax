@@ -1,4 +1,4 @@
-🌟 Transform Teaching Together with EducMax! 🌟
+# 🌟 Transform Teaching Together with EducMax 🌟
 📚 Imagine a place where teachers like YOU come together to share, learn, and grow. That’s EducMax – your go-to platform for collaboration and creativity in education!
 
 Experience a Beautifully Designed Interface with EducMax! 🎨
